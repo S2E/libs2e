@@ -34,7 +34,7 @@ set(LIBS ${LIBS} ${VMI_LIBRARY_DIR}/libvmi.a memcached lua ${LLVM_LIBS} z3 ${FSI
 set(LIBS ${LIBS} boost_serialization boost_system boost_regex)
 endif()
 
-set(LIBS ${LIBS} ${LIBCOROUTINE_LIBRARY_DIR}/libcoroutine.a pthread glib-2.0 bsd)
+set(LIBS ${LIBS} ${LIBCOROUTINE_LIBRARY_DIR}/libcoroutine.a pthread glib-2.0 gomp bsd)
 
 
 
