@@ -67,7 +67,7 @@ find_package(LIBCOROUTINE REQUIRED)
 message(STATUS "Found libcoroutine ${LIBCOROUTINE_PACKAGE_VERSION}")
 
 if(WITH_TARGET MATCHES "s2e")
-    # TODO: look at libcpu compile options to figure this out§
+    # TODO: look at libcpu compile options to figure this out
     find_package(LIBS2ECORE REQUIRED)
     message(STATUS "Found s2e core ${LIBS2ECORE_PACKAGE_VERSION}")
 
@@ -89,8 +89,6 @@ string (REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " "
     "${flags_var_to_scrub}" "${${flags_var_to_scrub}}")
 endforeach()
 
-
-
 include_directories(${GLIB_PKG_INCLUDE_DIRS}
                     ${LIBTCG_INCLUDE_DIR}
                     ${LIBCPU_INCLUDE_DIR}
@@ -99,16 +97,16 @@ include_directories(${GLIB_PKG_INCLUDE_DIRS}
                     ${VMI_INCLUDE_DIR})
 
 link_directories(${GLIB_PKG_LIBRARY_DIRS}
-                    ${LIBTCG_LIBRARY_DIR}
-                    ${LIBCPU_LIBRARY_DIR}
-                    ${LIBQ_LIBRARY_DIR}
-                    ${KLEE_DIR}/lib
-                    ${LUA_DIR}
-                    ${Z3_DIR}
-                    ${FSIGCXX_LIBRARY_DIR}
-                    ${LIBCOROUTINE_LIBRARY_DIR}
-                    ${LIBS2ECORE_LIBRARY_DIR}
-                    ${LIBS2EPLUGINS_LIBRARY_DIR}
-                    ${VMI_LIBRARY_DIR})
+                 ${LIBTCG_LIBRARY_DIR}
+                 ${LIBCPU_LIBRARY_DIR}
+                 ${LIBQ_LIBRARY_DIR}
+                 ${KLEE_DIR}/lib
+                 ${LUA_DIR}
+                 ${Z3_DIR}
+                 ${FSIGCXX_LIBRARY_DIR}
+                 ${LIBCOROUTINE_LIBRARY_DIR}
+                 ${LIBS2ECORE_LIBRARY_DIR}
+                 ${LIBS2EPLUGINS_LIBRARY_DIR}
+                 ${VMI_LIBRARY_DIR})
 
 add_subdirectory(src)

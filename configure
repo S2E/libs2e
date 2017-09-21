@@ -192,7 +192,16 @@ LIBCPU_REVISION="$(get_git_revision)"
 # Configuring each target
 #################################################################
 
-for target in i386-softmmu i386-s2e-softmmu i386-s2e_sp-softmmu x86_64-softmmu x86_64-s2e-softmmu x86_64-s2e_sp-softmmu; do
+TARGETS="i386-softmmu
+         i386-s2e-softmmu
+         i386-s2e_sp-softmmu
+         x86_64-softmmu
+         x86_64-s2e-softmmu
+         x86_64-s2e_sp-softmmu
+         arm-softmmu
+         arm-s2e-softmmu
+         arm-s2e_sp-softmmu"
+for target in $TARGETS; do
 echo "============== Configuring $target ============== "
 echo
 
@@ -256,8 +265,8 @@ cmake -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX      \
     -DCAPSTONE_INCLUDE_DIR=$CAPSTONE_INCDIR                 \
     -DWITH_TARGET="$target"                                 \
     -DCONFIG_DATE="$(date)"                                 \
-    -DCONFIG_LIBCPU_DATADIR="$BUILD_DIR/$target"              \
-    -DLIBCPU_REVISION="$LIBCPU_REVISION"                        \
+    -DCONFIG_LIBCPU_DATADIR="$BUILD_DIR/$target"            \
+    -DLIBCPU_REVISION="$LIBCPU_REVISION"                    \
     "$LIBCPU_SRC"
 
 if [ $? -ne 0 ]; then
