@@ -20,8 +20,16 @@
 #include <unistd.h>
 
 #include <cpu/exec.h>
-#include <cpu/i386/cpu.h>
 #include <cpu/kvm.h>
+
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
+#include <cpu/i386/cpu.h>
+#elif defined(TARGET_ARM)
+#include <cpu/arm/cpu.h>
+#else
+#error Unsupported target architecture
+#endif
+
 #include "s2e-kvm-interface.h"
 
 #ifdef CONFIG_SYMBEX
@@ -227,6 +235,7 @@ static int handle_kvm_vcpu_ioctl(int fd, int request, uint64_t arg1) {
         case KVM_SET_MP_STATE: {
             ret = s2e_kvm_vcpu_set_mp_state(fd, (struct kvm_mp_state *) arg1);
         } break;
+
         /***********************************************/
         case KVM_GET_REGS: {
             ret = s2e_kvm_vcpu_get_regs(fd, (struct kvm_regs *) arg1);

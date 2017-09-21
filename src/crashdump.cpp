@@ -14,6 +14,7 @@ extern "C" {
 #include <cpu/i386/cpu.h>
 #include <cpu/memory.h>
 #include <cpu/types.h>
+
 extern struct CPUX86State *env;
 uintptr_t s2e_get_host_address(target_phys_addr_t paddr);
 void generate_crashdump(CPUX86State *env);
