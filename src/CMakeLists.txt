@@ -36,7 +36,8 @@ if(WITH_TARGET MATCHES "s2e")
                      ${KLEE_DIR}/lib/libkleeSupport.a
                      ${KLEE_DIR}/lib/libkleeBasic.a)
     set(LIBS ${LIBS} ${VMI_LIBRARY_DIR}/libvmi.a
-                     elf)
+                     elf
+                     bfd)
     set(LIBS ${LIBS} memcached
                      lua
                      ${LLVM_LIBS}
