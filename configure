@@ -28,6 +28,7 @@ echo "  --with-z3-incdir=PATH            Z3 include directory"
 echo "  --with-z3-libdir=PATH            Z3 library directory"
 echo "  --enable-debug                   Compile library with debug information"
 echo "  --with-s2e-guest-incdir=PATH     Path to S2E guest headers"
+echo "  --enable-python-plugins          Enable Python plugins"
 }
 
 LLVM_ROOT=
@@ -112,6 +113,10 @@ for opt do
         S2EGUEST_INCDIR="$optarg"
     ;;
 
+    --enable-python-plugins)
+        S2E_PYTHON_PLUGINS=y
+    ;;
+
     *) echo "Unknown option $opt"
     ;;
   esac
@@ -182,13 +187,19 @@ ln -sf "$SRC_DIR/Makefile.target" Makefile
 
 ARCH="$(echo $target | cut -d '-' -f 1)"
 
-#Filter debug flags
+# Filter debug flags
 if [ $DEBUG = "y" ]; then
    BUILD_TYPE=Debug
 else
    BUILD_TYPE=RelWithDebInfo
 fi
 
+# Filter S2E Python plugins enabled/disabled
+if [ $S2E_PYTHON_PLUGINS = "y" ]; then
+    PYTHON_PLUGINS=ON
+else
+    PYTHON_PLUGINS=OFF
+fi
 
 echo > config.mak
 
@@ -233,8 +244,8 @@ cmake -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX      \
     -DLIBQ_DIR=$LIBQ_DIR                                    \
     -DWITH_TARGET="$target"                                 \
     -DCONFIG_DATE="$(date)"                                 \
-    -DCONFIG_LIBCPU_DATADIR="$BUILD_DIR/$target"              \
-    -DLIBCPU_REVISION="$LIBCPU_REVISION"                        \
+    -DCONFIG_LIBCPU_DATADIR="$BUILD_DIR/$target"            \
+    -DLIBCPU_REVISION="$LIBCPU_REVISION"                    \
     "$LIBCPU_SRC"
 
 if [ $? -ne 0 ]; then
@@ -257,6 +268,7 @@ cmake -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX      \
     -DFSIGCXX_DIR="$FSIGCXX_DIR"                            \
     -DLIBQ_DIR=$LIBQ_DIR                                    \
     -DLUA_DIR=$LIBLUA_LIB                                   \
+    -DPYTHON_PLUGINS=$PYTHON_PLUGINS                        \
     "$LIBS2ECORE_SRC"
 
 if [ $? -ne 0 ]; then
@@ -308,6 +320,7 @@ cmake -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX      \
     -DLUA_DIR="$LIBLUA_LIB"                                 \
     -DFSIGCXX_DIR="$FSIGCXX_DIR"                            \
     -DZ3_DIR="$Z3_LIBDIR"                                   \
+    -DPYTHON_PLUGINS=$PYTHON_PLUGINS                        \
     -DWITH_TARGET="$target"                                 \
     "$SRC_DIR"
 

@@ -29,6 +29,9 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(GLIB_PKG glib-2.0)
 include_directories(${GLIB_PKG_INCLUDE_DIRS})
 
+##### Python plugins #####
+option(PYTHON_PLUGINS "Enable Python plugins")
+
 ##### LLVM #####
 find_package(LLVM REQUIRED)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -67,15 +70,15 @@ find_package(LIBCOROUTINE REQUIRED)
 message(STATUS "Found libcoroutine ${LIBCOROUTINE_PACKAGE_VERSION}")
 
 if(WITH_TARGET MATCHES "s2e")
-    # TODO: look at libcpu compile options to figure this out§
+    # TODO: look at libcpu compile options to figure this out
     find_package(LIBS2ECORE REQUIRED)
     message(STATUS "Found s2e core ${LIBS2ECORE_PACKAGE_VERSION}")
 
     find_package(LIBS2EPLUGINS REQUIRED)
-    message(STATUS "Found s2e plguins ${LIBS2EPLUGINS_PACKAGE_VERSION}")
+    message(STATUS "Found s2e plugins ${LIBS2EPLUGINS_PACKAGE_VERSION}")
 
     include_directories(${LIBS2ECORE_INCLUDE_DIR} ${LIBS2EPLUGINS_INCLUDE_DIR})
-endif()
+endif(WITH_TARGET MATCHES "s2e")
 
 # We want to keep NDEBUG in all builds
 foreach (flags_var_to_scrub

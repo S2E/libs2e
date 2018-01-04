@@ -23,7 +23,7 @@ add_executable(
 # Specify whole path for libraries so that libs2e can be relinked if any of them changes.
 # Just specifying the short library name prevents cmake from detecting the dependency.
 if(WITH_TARGET MATCHES "s2e")
-set(LIBS -Wl,--whole-archive ${LIBS2EPLUGINS_LIBRARY_DIR}/libs2eplugins.a ${LIBS2ECORE_LIBRARY_DIR}/libs2ecore.a -Wl,--no-whole-archive ${LIBS})
+    set(LIBS -Wl,--whole-archive ${LIBS2EPLUGINS_LIBRARY_DIR}/libs2eplugins.a ${LIBS2ECORE_LIBRARY_DIR}/libs2ecore.a -Wl,--no-whole-archive ${LIBS})
 endif()
 
 set(LIBS ${LIBS} ${LIBCPU_LIBRARY_DIR}/libcpu.a ${LIBTCG_LIBRARY_DIR}/libtcg.a)
@@ -46,13 +46,17 @@ if(WITH_TARGET MATCHES "s2e")
     set(LIBS ${LIBS} boost_serialization
                      boost_system
                      boost_regex)
-endif()
+
+    if(PYTHON_PLUGINS)
+        find_package(PythonLibs 2.7 REQUIRED)
+        set(LIBS ${LIBS} boost_python ${PYTHON_LIBRARIES})
+    endif(PYTHON_PLUGINS)
+endif(WITH_TARGET MATCHES "s2e")
 
 set(LIBS ${LIBS} ${LIBCOROUTINE_LIBRARY_DIR}/libcoroutine.a pthread glib-2.0 bsd)
 
 target_link_libraries(tests2e PUBLIC ${LIBCOROUTINE_LIBRARY_DIR}/libcoroutine.a pthread glib-2.0)
 target_link_libraries(s2e ${LIBS})
-
 
 set(WERROR_FLAGS "-Werror -Wno-zero-length-array -Wno-c99-extensions          \
                   -Wno-gnu-anonymous-struct -Wno-nested-anon-types            \
@@ -64,8 +68,10 @@ set(WERROR_FLAGS "-Werror -Wno-zero-length-array -Wno-c99-extensions          \
                   -Wno-deprecated-declarations -Wno-initializer-overrides     \
                   -Wno-zero-length-array")
 
-set(COMMON_FLAGS "-D__STDC_FORMAT_MACROS -D_GNU_SOURCE -DNEED_CPU_H  -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -DTARGET_PHYS_ADDR_BITS=64")
-set(COMMON_FLAGS "${COMMON_FLAGS} -Wall -fPIC -fno-strict-aliasing -fexceptions")
+set(COMMON_FLAGS "-D__STDC_FORMAT_MACROS -D_GNU_SOURCE                        \
+                  -DNEED_CPU_H  -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE    \
+                  -DTARGET_PHYS_ADDR_BITS=64 -Wall -fPIC -fno-strict-aliasing \
+                  -fexceptions")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WERROR_FLAGS} ${COMMON_FLAGS} -std=c++11")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WERROR_FLAGS} ${COMMON_FLAGS}")
