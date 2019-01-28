@@ -123,7 +123,7 @@ char *libcpu_find_file(int type, const char *name) {
             abort();
     }
     len = strlen(data_dir) + strlen(name) + strlen(subdir) + 2;
-    buf = g_malloc0(len);
+    buf = (char *) g_malloc0(len);
     snprintf(buf, len, "%s/%s%s", data_dir, subdir, name);
     if (access(buf, R_OK)) {
         g_free(buf);

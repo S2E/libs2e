@@ -5,19 +5,19 @@
 
 add_library(
     s2e SHARED
-    libs2e.c
-    s2e-kvm-interface.c
-    s2e-kvm-io.c
-    s2e-kvm-libcpu-stubs.c
-    s2e-kvm-state.c
-    s2e-kvm-trace.c
-    s2e-libcpu-interface.c
+    libs2e.cpp
+    s2e-kvm-interface.cpp
+    s2e-kvm-io.cpp
+    s2e-kvm-libcpu-stubs.cpp
+    s2e-kvm-state.cpp
+    s2e-kvm-trace.cpp
+    s2e-libcpu-interface.cpp
     crashdump.cpp
 )
 
 add_executable(
     tests2e
-    test.c
+    test.cpp
 )
 
 # Specify whole path for libraries so that libs2e can be relinked if any of them changes.

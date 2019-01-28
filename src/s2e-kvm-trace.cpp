@@ -228,7 +228,7 @@ int handle_kvm_vcpu_ioctl_trace(int fd, int request, uint64_t arg1) {
         /***********************************************/
         case KVM_RUN: {
             if (!s_kvm_run) {
-                s_kvm_run = mmap(NULL, s_kvm_vcpu_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+                s_kvm_run = (kvm_run *) mmap(NULL, s_kvm_vcpu_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
                 if (s_kvm_run == MAP_FAILED) {
                     printf("Could not map the cpu struct errno=%s\n", strerror(errno));
                     exit(-1);

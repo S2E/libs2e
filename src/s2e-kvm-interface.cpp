@@ -410,7 +410,7 @@ static Coroutine *s_kvm_cpu_coroutine;
 
 int s2e_kvm_vm_create_vcpu(int vm_fd) {
     size_t size = s2e_kvm_get_vcpu_mmap_size();
-    g_kvm_vcpu_buffer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+    g_kvm_vcpu_buffer = (kvm_run *) mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 
     // Magic file descriptor
     // We don't need a real one, just something to recognize ioctl calls.
@@ -510,7 +510,8 @@ int s2e_kvm_vm_get_dirty_log(int vm_fd, struct kvm_dirty_log *log) {
 
     pthread_mutex_trylock(&s_cpu_lock);
 
-    cpu_physical_memory_get_dirty_bitmap(log->dirty_bitmap, r->ram_addr, r->kvm.memory_size, VGA_DIRTY_FLAG);
+    cpu_physical_memory_get_dirty_bitmap((uint8_t *) log->dirty_bitmap, r->ram_addr, r->kvm.memory_size,
+                                         VGA_DIRTY_FLAG);
 
     cpu_physical_memory_reset_dirty(r->ram_addr, r->ram_addr + r->kvm.memory_size - 1, VGA_DIRTY_FLAG);
 
