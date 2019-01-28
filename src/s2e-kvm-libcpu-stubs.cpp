@@ -20,7 +20,9 @@
 #include <s2e/monitor.h>
 #endif
 
-#include "s2e-kvm-interface.h"
+#include "s2e-kvm.h"
+
+extern "C" {
 
 FILE *logfile;
 int loglevel = 0;
@@ -132,3 +134,4 @@ char *libcpu_find_file(int type, const char *name) {
     return buf;
 }
 #endif
+}

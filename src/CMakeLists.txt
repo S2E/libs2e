@@ -6,11 +6,13 @@
 add_library(
     s2e SHARED
     libs2e.cpp
-    s2e-kvm-interface.cpp
     s2e-kvm-io.cpp
     s2e-kvm-libcpu-stubs.cpp
     s2e-kvm-state.cpp
     s2e-kvm-trace.cpp
+    s2e-kvm.cpp
+    s2e-kvm-vm.cpp
+    s2e-kvm-vcpu.cpp
     s2e-libcpu-interface.cpp
     crashdump.cpp
 )
