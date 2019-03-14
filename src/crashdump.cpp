@@ -20,7 +20,6 @@ extern "C" {
 #include <cpu/se_libcpu.h>
 #endif
 
-
 extern struct CPUX86State *env;
 uintptr_t s2e_get_host_address(target_phys_addr_t paddr);
 void generate_crashdump(void);

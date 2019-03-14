@@ -49,7 +49,9 @@ if(WITH_TARGET MATCHES "s2e")
 endif()
 
 
+
 set(LIBS ${LIBS} ${LIBCOROUTINE_LIBRARY_DIR}/libcoroutine.a  ${CAPSTONE_LIB_DIR}/libcapstone.a pthread glib-2.0 bsd)
+
 
 
 target_link_libraries(tests2e PUBLIC ${LIBCOROUTINE_LIBRARY_DIR}/libcoroutine.a pthread glib-2.0)
