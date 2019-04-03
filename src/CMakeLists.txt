@@ -3,6 +3,7 @@
 #
 # Licensed under the Cyberhaven Research License Agreement.
 
+if(WITH_TARGET MATCHES "i386" OR WITH_TARGET MATCHES "x86_64")
 add_library(
     s2e SHARED
     libs2e.cpp
@@ -15,6 +16,20 @@ add_library(
     s2e-libcpu-interface.cpp
     crashdump.cpp
 )
+elseif(WITH_TARGET MATCHES "arm")
+add_library(
+    s2e SHARED
+    libs2e.c
+    s2e-kvm-interface.c
+    s2e-kvm-io.c
+    s2e-kvm-state-arm.c
+	s2e-kvm-libcpu-stubs-arm.c
+    s2e-kvm-trace.c
+    s2e-libcpu-interface.c
+)
+else()
+    message(FATAL_ERROR "Incorrect target ${WITH_TARGET}")
+endif()
 
 add_executable(
     tests2e
