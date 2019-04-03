@@ -115,15 +115,15 @@ static int handle_kvm_ioctl(int fd, int request, uint64_t arg1) {
         case KVM_GET_VCPU_MMAP_SIZE: {
             ret = s2e_kvm_get_vcpu_mmap_size();
         } break;
+		#if defined(TARGET_I386) || defined(TARGET_X86_64)
+				case KVM_GET_MSR_INDEX_LIST: {
+					ret = s2e_kvm_get_msr_index_list(fd, (struct kvm_msr_list *) arg1);
+				} break;
 
-        case KVM_GET_MSR_INDEX_LIST: {
-            ret = s2e_kvm_get_msr_index_list(fd, (struct kvm_msr_list *) arg1);
-        } break;
-
-        case KVM_GET_SUPPORTED_CPUID: {
-            ret = s2e_kvm_get_supported_cpuid(fd, (struct kvm_cpuid2 *) arg1);
-        } break;
-
+				case KVM_GET_SUPPORTED_CPUID: {
+					ret = s2e_kvm_get_supported_cpuid(fd, (struct kvm_cpuid2 *) arg1);
+				} break;
+		#endif
         default: {
             fprintf(stderr, "libs2e: unknown KVM IOCTL %x\n", request);
             exit(-1);
@@ -212,7 +212,7 @@ static int handle_kvm_vm_ioctl(int fd, int request, uint64_t arg1) {
 
     return ret;
 }
-
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 static int handle_kvm_vcpu_ioctl(int fd, int request, uint64_t arg1) {
     int ret = -1;
     switch ((uint32_t) request) {
@@ -327,6 +327,76 @@ static int handle_kvm_vcpu_ioctl(int fd, int request, uint64_t arg1) {
     return ret;
 }
 
+#elif defined(TARGET_ARM)
+static int handle_kvm_vcpu_ioctl_arm(int fd, int request, uint64_t arg1) {
+    int ret = -1;
+    switch ((uint32_t) request) {
+		case KVM_RUN: {
+			return s2e_kvm_vcpu_run(fd);
+		} break;
+
+
+		case KVM_SET_MP_STATE: {
+			if (g_handling_dev_state) {
+				ret = 0;
+			} else {
+				ret = s2e_kvm_vcpu_set_mp_state(fd, (struct kvm_mp_state *) arg1);
+			}
+		} break;
+		case KVM_GET_MP_STATE: {
+			ret = s2e_kvm_vcpu_get_mp_state(fd, (struct kvm_mp_state *) arg1);
+		} break;
+        case KVM_SET_SIGNAL_MASK: {
+            ret = s2e_kvm_vcpu_set_signal_mask(fd, (struct kvm_signal_mask *) arg1);
+        } break;
+
+        /***********************************************/
+        // When the symbolic execution engine needs to take a system snapshot,
+        // it must rely on the KVM client to save the device state. That client
+        // will typically also save/restore the CPU state. We don't want the client
+        // to do that, so in order to not modify the client too much, we ignore
+        // the calls to register setters when they are done in the context of
+        // device state snapshotting.
+    	case KVM_ARM_VCPU_INIT: {
+    		ret = s2e_kvm_arch_vcpu_ioctl_vcpu_init(fd, (struct kvm_vcpu_init*)arg1);
+    		break;
+    	}
+        case KVM_SET_ONE_REG: {
+            if (g_handling_dev_state) {
+                ret = 0;
+            } else {
+                ret = s2e_kvm_vcpu_set_one_reg(fd, (struct kvm_one_reg *) arg1);
+            }
+        } break;
+        case KVM_GET_ONE_REG: {
+            if (g_handling_dev_state) {
+                // Poison the returned registers to make sure we don't use
+                // it again by accident. We can't just fail the call because
+                // the client needs it to save the cpu state (that we ignore).
+                memset((void *) arg1, 0xff, sizeof(struct kvm_one_reg));
+                ret = 0;
+            } else {
+                ret = s2e_kvm_vcpu_get_one_reg(fd, (struct kvm_one_reg *) arg1);
+            }
+        } break;
+
+
+        /***********************************************/
+
+        default: {
+            fprintf(stderr, "libs2e: unknown KVM VCPU IOCTL vcpu %d request=%#x arg=%#" PRIx64 " ret=%#x\n", fd,
+                    request, arg1, ret);
+            exit(-1);
+        }
+    }
+
+    return ret;
+}
+
+#else
+#error Unsupported target architecture
+#endif
+
 ioctl_t g_original_ioctl;
 int ioctl(int fd, int request, uint64_t arg1) {
     int ret = -1;
@@ -352,7 +422,13 @@ int ioctl(int fd, int request, uint64_t arg1) {
             // printf("ioctl vm %d request=%#x arg=%#"PRIx64" ret=%#x\n", fd, request, arg1, ret);
             ret = handle_kvm_vm_ioctl(fd, request, arg1);
         } else if (fd == g_kvm_vcpu_fd) {
-            ret = handle_kvm_vcpu_ioctl(fd, request, arg1);
+			#if defined(TARGET_I386) || defined(TARGET_X86_64)
+        	ret = handle_kvm_vcpu_ioctl(fd, request, arg1);
+			#elif defined(TARGET_ARM)
+        	ret = handle_kvm_vcpu_ioctl_arm(fd, request, arg1);
+			#else
+			#error Unsupported target architecture
+			#endif
         } else {
             // printf("ioctl on %d\n", fd);
             ret = g_original_ioctl(fd, request, arg1);

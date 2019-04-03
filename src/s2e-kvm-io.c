@@ -13,11 +13,18 @@
 #include <inttypes.h>
 
 #include <cpu/exec.h>
+#include <cpu/cpu-common.h>
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 #include <cpu/i386/cpu.h>
+#elif defined(TARGET_ARM)
+#include <cpu/arm/cpu.h>
+#else
+#error Unsupported target architecture
+#endif
 #include <libcpu-log.h>
 #include "s2e-kvm-interface.h"
 
-extern CPUX86State *env;
+extern CPUArchState *env;
 
 // This is an experimental feature
 // #define ENABLE_RETRANSLATE
@@ -48,13 +55,13 @@ uint64_t s2e_kvm_mmio_read(target_phys_addr_t addr, unsigned size) {
     int is_apic_tpr_access = 0;
 
     ++g_stats.mmio_reads;
-
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     if ((addr >> TARGET_PAGE_BITS) == (env->v_apic_base >> TARGET_PAGE_BITS)) {
         if ((addr & 0xfff) == 0x80) {
             is_apic_tpr_access = 1;
         }
     }
-
+#endif
     if (is_apic_tpr_access) {
         abort_and_retranslate_if_needed();
     }
@@ -83,6 +90,7 @@ uint64_t s2e_kvm_mmio_read(target_phys_addr_t addr, unsigned size) {
             assert(false && "Can't get here");
     }
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     // This is a fix for 32-bits guests that access apic directly
     // and don't use cr8. Writing to cr8 clears the low four bits
     // of the TPR, which may confuse the guest.
@@ -94,6 +102,7 @@ uint64_t s2e_kvm_mmio_read(target_phys_addr_t addr, unsigned size) {
             ret |= env->v_apic_tpr & 0x3;
         }
     }
+#endif
 
 #ifdef SE_KVM_DEBUG_MMIO
     unsigned print_addr = 0;
@@ -147,7 +156,7 @@ void s2e_kvm_mmio_write(target_phys_addr_t addr, uint64_t data, unsigned size) {
         default:
             assert(false && "Can't get here");
     }
-
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     bool is_apic_tpr_access = false;
     if ((addr >> TARGET_PAGE_BITS) == (env->v_apic_base >> TARGET_PAGE_BITS)) {
         if ((addr & 0xfff) == 0x80) {
@@ -157,7 +166,7 @@ void s2e_kvm_mmio_write(target_phys_addr_t addr, uint64_t data, unsigned size) {
             is_apic_tpr_access = true;
         }
     }
-
+#endif
     coroutine_yield();
 
     // A write to the task priority register may umask hardware interrupts.
@@ -165,9 +174,11 @@ void s2e_kvm_mmio_write(target_phys_addr_t addr, uint64_t data, unsigned size) {
     // We try to do it as best as we can here by requesting an exit from the CPU loop.
     // Some buggy guests may crash if we exit too late (e.g., winxp).
     // This mechanism is complementary to s2e_kvm_request_exit().
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     if (is_apic_tpr_access) {
         cpu_exit(env);
     }
+#endif
 }
 
 uint64_t s2e_kvm_ioport_read(pio_addr_t addr, unsigned size) {

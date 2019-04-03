@@ -15,7 +15,13 @@
 #define BIT(n) (1 << (n))
 #include <cpu/kvm.h>
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 #include <cpu/i386/cpu.h>
+#elif defined(TARGET_ARM)
+#include <cpu/arm/cpu.h>
+#else
+#error Unsupported target architecture
+#endif
 #include <cpu/se_libcpu.h>
 #include <timer.h>
 #include "s2e-kvm-interface.h"
@@ -319,6 +325,7 @@ int s2e_kvm_vcpu_set_regs(int vcpu_fd, struct kvm_regs *regs) {
     return 0;
 }
 
+
 int s2e_kvm_vcpu_set_fpu(int vcpu_fd, struct kvm_fpu *fpu) {
     env->fpstt = (fpu->fsw >> 11) & 7;
     env->fpus = fpu->fsw;
@@ -460,6 +467,7 @@ int s2e_kvm_vcpu_get_regs(int vcpu_fd, struct kvm_regs *regs) {
     return 0;
 }
 
+
 int s2e_kvm_vcpu_get_fpu(int vcpu_fd, struct kvm_fpu *fpu) {
     int i;
 
@@ -588,3 +596,34 @@ int s2e_kvm_vm_get_clock(int vm_fd, struct kvm_clock_data *clock) {
     clock->flags = 0;
     return 0;
 }
+/*****interrupt****/
+int s2e_kvm_vcpu_interrupt(int vcpu_fd, struct kvm_interrupt *interrupt) {
+#ifdef SE_KVM_DEBUG_IRQ
+    printf("IRQ %d env->mflags=%lx hflags=%x hflags2=%x ptr=%#x\n", interrupt->irq, (uint64_t) env->mflags, env->hflags,
+           env->hflags2, env->v_tpr);
+    fflush(stdout);
+#endif
+
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
+    if (env->cr[0] & CR0_PE_MASK) {
+        assert(interrupt->irq > (env->v_tpr << 4));
+    }
+#endif
+
+    assert(!g_handling_kvm_cb);
+    assert(!s_in_kvm_run);
+    assert(env->mflags & IF_MASK);
+    assert(!(env->interrupt_request & CPU_INTERRUPT_HARD));
+    env->interrupt_request |= CPU_INTERRUPT_HARD;
+    env->kvm_irq = interrupt->irq;
+
+    return 0;
+}
+
+int s2e_kvm_vcpu_nmi(int vcpu_fd) {
+    env->interrupt_request |= CPU_INTERRUPT_NMI;
+    return 0;
+}
+
+
+

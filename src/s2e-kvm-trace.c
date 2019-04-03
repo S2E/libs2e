@@ -22,6 +22,7 @@
 #include <cpu/kvm.h>
 #include "s2e-kvm-interface.h"
 
+
 static struct kvm_run *s_kvm_run;
 static int s_kvm_vcpu_size;
 
@@ -77,7 +78,7 @@ int handle_kvm_ioctl_trace(int fd, int request, uint64_t arg1) {
                    ret);
             s_kvm_vcpu_size = ret;
         } break;
-
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
         case KVM_GET_MSR_INDEX_LIST: {
             ret = g_original_ioctl(fd, request, arg1);
             printf("%s %s req=%#x arg=%#" PRIx64 " ret=%#x\n", __FUNCTION__, "KVM_GET_MSR_INDEX_LIST", request, arg1,
@@ -89,7 +90,7 @@ int handle_kvm_ioctl_trace(int fd, int request, uint64_t arg1) {
             printf("%s %s req=%#x arg=%#" PRIx64 " ret=%#x\n", __FUNCTION__, "KVM_GET_SUPPORTED_CPUID", request, arg1,
                    ret);
         } break;
-
+#endif
         default: {
             printf("%s Unsupported request %x\n", __FUNCTION__, request);
             // return s_original_ioctl(fd, request, arg1);
@@ -155,7 +156,7 @@ int handle_kvm_vm_ioctl_trace(int fd, int request, uint64_t arg1) {
 
     return ret;
 }
-
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 int handle_kvm_vcpu_ioctl_trace(int fd, int request, uint64_t arg1) {
     int ret = -1;
     switch ((uint32_t) request) {
@@ -254,6 +255,60 @@ int handle_kvm_vcpu_ioctl_trace(int fd, int request, uint64_t arg1) {
 
     return ret;
 }
+#elif defined(TARGET_ARM)
+int handle_kvm_vcpu_ioctl_trace(int fd, int request, uint64_t arg1) {
+    int ret = -1;
+    switch ((uint32_t) request) {
+
+        case KVM_SET_SIGNAL_MASK: {
+            ret = g_original_ioctl(fd, request, arg1);
+            printf("%s %s req=%#x arg=%#" PRIx64 " ret=%#x\n", __FUNCTION__, "KVM_SET_SIGNAL_MASK", request, arg1, ret);
+        } break;
+
+
+        case KVM_SET_MP_STATE: {
+            ret = g_original_ioctl(fd, request, arg1);
+            printf("%s %s req=%#x arg=%#" PRIx64 " ret=%#x\n", __FUNCTION__, "KVM_SET_MP_STATE", request, arg1, ret);
+        } break;
+        /***********************************************/
+
+
+
+        case KVM_GET_MP_STATE: {
+            ret = g_original_ioctl(fd, request, arg1);
+            printf("%s %s req=%#x arg=%#" PRIx64 " ret=%#x\n", __FUNCTION__, "KVM_GET_MP_STATE", request, arg1, ret);
+        } break;
+
+        /***********************************************/
+        case KVM_RUN: {
+            if (!s_kvm_run) {
+                s_kvm_run = mmap(NULL, s_kvm_vcpu_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+                if (s_kvm_run == MAP_FAILED) {
+                    printf("Could not map the cpu struct errno=%s\n", strerror(errno));
+                    exit(-1);
+                }
+            }
+
+            ret = g_original_ioctl(fd, request, arg1);
+            trace_s2e_kvm_run(s_kvm_run, ret);
+        } break;
+
+
+
+        default: {
+            printf("ioctl vcpu %d request=%#x arg=%#" PRIx64 " ret=%#x\n", fd, request, arg1, ret);
+            exit(-1);
+        }
+    }
+
+    return ret;
+}
+
+#else
+#error Unsupported target architecture
+#endif
+
+
 
 void trace_s2e_kvm_run(struct kvm_run *run, int ret) {
     printf("KVM_RUN EXIT ret=%#x reason=%#x apic_base=%llx cr8=%llx if_flag=%d req_int=%d rdy=%d\n", ret,

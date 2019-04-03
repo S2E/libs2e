@@ -78,7 +78,7 @@ void apic_sipi(DeviceState *d) {
 }
 
 void apic_init_reset(DeviceState *d) {
-    //    assert(0 && "Not implemented");
+    assert(0 && "Not implemented");
 }
 
 void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip, TPRAccess access) {
