@@ -596,34 +596,7 @@ int s2e_kvm_vm_get_clock(int vm_fd, struct kvm_clock_data *clock) {
     clock->flags = 0;
     return 0;
 }
-/*****interrupt****/
-int s2e_kvm_vcpu_interrupt(int vcpu_fd, struct kvm_interrupt *interrupt) {
-#ifdef SE_KVM_DEBUG_IRQ
-    printf("IRQ %d env->mflags=%lx hflags=%x hflags2=%x ptr=%#x\n", interrupt->irq, (uint64_t) env->mflags, env->hflags,
-           env->hflags2, env->v_tpr);
-    fflush(stdout);
-#endif
 
-#if defined(TARGET_I386) || defined(TARGET_X86_64)
-    if (env->cr[0] & CR0_PE_MASK) {
-        assert(interrupt->irq > (env->v_tpr << 4));
-    }
-#endif
-
-    assert(!g_handling_kvm_cb);
-    assert(!s_in_kvm_run);
-    assert(env->mflags & IF_MASK);
-    assert(!(env->interrupt_request & CPU_INTERRUPT_HARD));
-    env->interrupt_request |= CPU_INTERRUPT_HARD;
-    env->kvm_irq = interrupt->irq;
-
-    return 0;
-}
-
-int s2e_kvm_vcpu_nmi(int vcpu_fd) {
-    env->interrupt_request |= CPU_INTERRUPT_NMI;
-    return 0;
-}
 
 
 

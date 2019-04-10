@@ -22,6 +22,7 @@ add_library(
     s2e-kvm-interface.c
     s2e-kvm-io.c
     s2e-kvm-state-arm.c
+	s2e-kvm-libcpu-stubs-arm.c
     s2e-kvm-trace.c
     s2e-libcpu-interface.c
 )

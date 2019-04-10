@@ -353,7 +353,7 @@ int s2e_kvm_create_vm(int kvm_fd) {
 #elif defined(TARGET_I386)
     g_cpu_env = env = cpu_x86_init("qemu32-s2e");
 #elif defined(TARGET_ARM)
-    g_cpu_env = env = cpu_arm_init("any");
+    g_cpu_env = env = cpu_arm_init("cortex-m3");
 #else
 #error unknown architecture
 #endif
@@ -364,8 +364,9 @@ int s2e_kvm_create_vm(int kvm_fd) {
 
 #if defined(TARGET_I386) || defined(TARGET_X86_64)
     g_cpu_env->v_apic_base = 0xfee00000;
-    g_cpu_env->size = sizeof(*g_cpu_env);
 #endif
+
+    g_cpu_env->size = sizeof(*g_cpu_env);
     if (s2e_kvm_init_cpu_lock() < 0) {
         exit(-1);
     }
@@ -431,7 +432,7 @@ int s2e_kvm_vm_create_vcpu(int vm_fd) {
 
     // Magic file descriptor
     // We don't need a real one, just something to recognize ioctl calls.
-    g_kvm_vcpu_fd = vm_fd + 234234;
+    g_kvm_vcpu_fd = open("/dev/null", O_RDWR | O_CREAT | O_TRUNC, 0700);
     cpu_exec_init_all();
     return g_kvm_vcpu_fd;
 }
@@ -699,7 +700,7 @@ static void coroutine_fn s2e_kvm_cpu_coroutine(void *opaque) {
 
         g_cpu_state_is_precise = 0;
         env->exit_request = 0;
-
+        printf("cpu_exec begin\n");
 #if defined(TARGET_I386) || defined(TARGET_X86_64)
     cpu_x86_exec(env);
 #elif defined(TARGET_ARM)
@@ -803,7 +804,7 @@ int s2e_kvm_vcpu_run(int vcpu_fd) {
 
     g_handling_kvm_cb = 0;
     g_handling_dev_state = 0;
-
+    printf("KVM_RUN start\n");
     coroutine_enter(s_kvm_cpu_coroutine, NULL);
 
     if (s_s2e_exiting) {
@@ -879,7 +880,36 @@ int s2e_kvm_vcpu_run(int vcpu_fd) {
     return ret;
 }
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
+/*****x86 interrupt****/
+int s2e_kvm_vcpu_interrupt(int vcpu_fd, struct kvm_interrupt *interrupt) {
+#ifdef SE_KVM_DEBUG_IRQ
+    printf("IRQ %d env->mflags=%lx hflags=%x hflags2=%x ptr=%#x\n", interrupt->irq, (uint64_t) env->mflags, env->hflags,
+           env->hflags2, env->v_tpr);
+    fflush(stdout);
+#endif
 
+
+    if (env->cr[0] & CR0_PE_MASK) {
+        assert(interrupt->irq > (env->v_tpr << 4));
+    }
+
+
+    assert(!g_handling_kvm_cb);
+    assert(!s_in_kvm_run);
+    assert(env->mflags & IF_MASK);
+    assert(!(env->interrupt_request & CPU_INTERRUPT_HARD));
+    env->interrupt_request |= CPU_INTERRUPT_HARD;
+    env->kvm_irq = interrupt->irq;
+
+    return 0;
+}
+
+int s2e_kvm_vcpu_nmi(int vcpu_fd) {
+    env->interrupt_request |= CPU_INTERRUPT_NMI;
+    return 0;
+}
+#endif
 ///
 /// \brief s2e_kvm_request_exit triggers an exit from the cpu loop
 ///

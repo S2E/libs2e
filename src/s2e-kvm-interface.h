@@ -130,6 +130,11 @@ int s2e_kvm_vcpu_nmi(int vcpu_fd);
 int s2e_kvm_arch_vcpu_ioctl_vcpu_init(int vcpu_fd,struct kvm_vcpu_init *init);
 int s2e_kvm_vcpu_get_one_reg(int vcpu_fd, struct kvm_one_reg *reg);
 int s2e_kvm_vcpu_set_one_reg(int vcpu_fd, struct kvm_one_reg *reg);
+int s2e_kvm_vcpu_set_regs(int vcpu_fd, struct kvm_m_regs *regs);
+int s2e_kvm_vcpu_set_sregs(int vcpu_fd, struct kvm_m_sregs *sregs);
+int s2e_kvm_vcpu_get_regs(int vcpu_fd, struct kvm_m_regs *regs);
+int s2e_kvm_vcpu_get_sregs(int vcpu_fd, struct kvm_m_sregs *sregs);
+
 #else
 #error Unsupported target architecture
 #endif

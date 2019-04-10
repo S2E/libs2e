@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <cpu/apic.h>
 #include <cpu/exec.h>
 #include <tcg/tcg.h>
 #include <timer.h>
@@ -29,61 +28,6 @@ int mem_prealloc = 0; /* force preallocation of physical target memory */
 const char *mem_path = NULL;
 ram_addr_t ram_size = 128 * 1024 * 1024;
 
-void cpu_smm_update(CPUX86State *env) {
-    assert(0 && "Not implemented");
-}
-
-/* TSC handling */
-extern uint64_t g_clock_start;
-extern uint64_t g_clock_offset;
-uint64_t cpu_get_tsc(CPUX86State *env) {
-    return cpu_get_real_ticks() - g_clock_offset + g_clock_start;
-}
-
-extern CPUX86State *env;
-
-// TODO: remove all these APIC functions, op_helper
-// can modify the values directly.
-uint8_t cpu_get_apic_tpr(DeviceState *d) {
-    return env->v_tpr;
-}
-
-void cpu_set_apic_tpr(DeviceState *d, uint8_t val) {
-    // TODO: remove this function
-    abort();
-}
-
-void cpu_set_apic_base(DeviceState *d, uint64_t val) {
-    env->v_apic_base = val;
-}
-
-uint64_t cpu_get_apic_base(DeviceState *d) {
-    return env->v_apic_base;
-}
-
-void cpu_set_ferr(CPUX86State *s) {
-    assert(0 && "Not implemented");
-}
-
-int cpu_is_bsp(CPUX86State *env) {
-    return env->cpu_index == 0;
-}
-
-void libcpu_system_reset_request(void) {
-    assert(0 && "Not implemented");
-}
-
-void apic_sipi(DeviceState *d) {
-    assert(0 && "Not implemented");
-}
-
-void apic_init_reset(DeviceState *d) {
-    //assert(0 && "Not implemented");
-}
-
-void apic_handle_tpr_access_report(DeviceState *d, target_ulong ip, TPRAccess access) {
-    assert(0 && "Not implemented");
-}
 
 int cpu_get_pic_interrupt(CPUArchState *env) {
     int ret = env->kvm_irq;

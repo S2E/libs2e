@@ -330,12 +330,25 @@ static int handle_kvm_vcpu_ioctl(int fd, int request, uint64_t arg1) {
 #elif defined(TARGET_ARM)
 static int handle_kvm_vcpu_ioctl_arm(int fd, int request, uint64_t arg1) {
     int ret = -1;
+    //printf("ioctl vm %d request=%#lx arg=%#"PRIx64" ret=%#x\n", fd, KVM_SET_SREGS, arg1, ret);
     switch ((uint32_t) request) {
 		case KVM_RUN: {
 			return s2e_kvm_vcpu_run(fd);
 		} break;
-
-
+        case KVM_SET_REGS: {
+            if (g_handling_dev_state) {
+                ret = 0;
+            } else {
+                ret = s2e_kvm_vcpu_set_regs(fd, (struct kvm_m_regs *) arg1);
+            }
+        } break;
+        case KVM_SET_SREGS: {
+            if (g_handling_dev_state) {
+                ret = 0;
+            } else {
+                ret = s2e_kvm_vcpu_set_sregs(fd, (struct kvm_m_sregs *) arg1);
+            }
+        } break;
 		case KVM_SET_MP_STATE: {
 			if (g_handling_dev_state) {
 				ret = 0;
@@ -343,6 +356,22 @@ static int handle_kvm_vcpu_ioctl_arm(int fd, int request, uint64_t arg1) {
 				ret = s2e_kvm_vcpu_set_mp_state(fd, (struct kvm_mp_state *) arg1);
 			}
 		} break;
+        case KVM_GET_REGS: {
+            if (g_handling_dev_state) {
+                // Poison the returned registers to make sure we don't use
+                // it again by accident. We can't just fail the call because
+                // the client needs it to save the cpu state (that we ignore).
+                memset((void *) arg1, 0xff, sizeof(struct kvm_m_regs));
+                ret = 0;
+            } else {
+                ret = s2e_kvm_vcpu_get_regs(fd, (struct kvm_m_regs *) arg1);
+            }
+        } break;
+
+        case KVM_GET_SREGS: {
+            ret = s2e_kvm_vcpu_get_sregs(fd, (struct kvm_m_sregs *) arg1);
+        } break;
+
 		case KVM_GET_MP_STATE: {
 			ret = s2e_kvm_vcpu_get_mp_state(fd, (struct kvm_mp_state *) arg1);
 		} break;
@@ -423,8 +452,10 @@ int ioctl(int fd, int request, uint64_t arg1) {
             ret = handle_kvm_vm_ioctl(fd, request, arg1);
         } else if (fd == g_kvm_vcpu_fd) {
 			#if defined(TARGET_I386) || defined(TARGET_X86_64)
+        	printf("ioctl vm %d request=%#x arg=%#"PRIx64" ret=%#x\n", fd, request, arg1, ret);
         	ret = handle_kvm_vcpu_ioctl(fd, request, arg1);
 			#elif defined(TARGET_ARM)
+        	printf("ioctl vm %d request=%#x arg=%#"PRIx64" ret=%#x\n", fd, request, arg1, ret);
         	ret = handle_kvm_vcpu_ioctl_arm(fd, request, arg1);
 			#else
 			#error Unsupported target architecture

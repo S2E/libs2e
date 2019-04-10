@@ -336,3 +336,150 @@ int s2e_kvm_arch_vcpu_ioctl_vcpu_init(int vcpu_fd,struct kvm_vcpu_init *init)
 
 }
 
+
+int s2e_kvm_vcpu_set_regs(int vcpu_fd, struct kvm_m_regs *regs) {
+#ifdef CONFIG_SYMBEX
+    WR_cpu(env, regs[0], regs[0]);
+    WR_cpu(env, regs[1], regs[1]);
+    WR_cpu(env, regs[2], regs[2]);
+    WR_cpu(env, regs[3], regs[3]);
+    WR_cpu(env, regs[4], regs[4]);
+    WR_cpu(env, regs[5], regs[5]);
+    WR_cpu(env, regs[6], regs[6]);
+    WR_cpu(env, regs[7], regs[7]);
+    WR_cpu(env, regs[8], regs[8]);
+    WR_cpu(env, regs[9], regs[9]);
+    WR_cpu(env, regs[10], regs[10]);
+    WR_cpu(env, regs[11], regs[11]);
+    WR_cpu(env, regs[12], regs[12]);
+    WR_cpu(env, regs[13], regs[13]);
+    WR_cpu(env, regs[14], regs[14]);
+    WR_cpu(env, regs[15], regs[15]);
+#else
+    env->regs[0] = regs->regs[0];
+    env->regs[1] = regs->regs[1];
+    env->regs[2] = regs->regs[2];
+    env->regs[3] = regs->regs[3];
+    env->regs[4] = regs->regs[4];
+    env->regs[5] =regs->regs[5];
+    env->regs[6] = regs->regs[6];
+    env->regs[7] = regs->regs[7];
+    env->regs[8] = regs->regs[8];
+    env->regs[9] = regs->regs[9];
+    env->regs[10] = regs->regs[10];
+    env->regs[11] = regs->regs[11];
+    env->regs[12] = regs->regs[12];
+    env->regs[13] = regs->regs[13];
+    env->regs[14] = regs->regs[14];
+    env->regs[15] = regs->regs[15];
+    printf("r15=%#x\n",env->regs[15]);
+#endif
+
+//
+//    if (regs->rip != env->eip) {
+//        if (g_handling_kvm_cb || !g_cpu_state_is_precise) {
+//            // We don't support this at all, it's better to crash than to risk
+//            // guest corruption.
+//            abort();
+//        }
+//    }
+
+//    env->eip = regs->rip;
+//
+//    if (g_handling_kvm_cb) {
+//        fprintf(stderr, "warning: kvm setting cpu state while handling io\n");
+//        // TODO: try to set the system part of the flags register.
+//        // It should be OK to skip these because the KVM client usually writes
+//        // back the value it has just read when KVM_RUN exits. That value
+//        // is already stored in the CPU state of the symbex engine.
+//        assert(regs->rflags == env->mflags);
+//    } else {
+//        cpu_set_eflags(env, regs->rflags);
+//    }
+
+    return 0;
+}
+int s2e_kvm_vcpu_set_sregs(int vcpu_fd, struct kvm_m_sregs *sregs) {
+    // XXX: what about the interrupt bitmap?
+	env->v7m.other_sp = sregs->other_sp;
+	env->v7m.vecbase = sregs->vecbase;
+	env->v7m.basepri = sregs->basepri;
+	env->v7m.control = sregs->control;
+	env->v7m.current_sp = sregs->current_sp;
+	env->v7m.exception = sregs->exception;
+	env->v7m.pending_exception = sregs->pending_exception;
+	env->thumb = sregs->thumb;
+	printf("other_sp=%#x\n",env->v7m.other_sp);
+	printf("thumb=%#x\n", env->thumb);
+    return 0;
+}
+
+int s2e_kvm_vcpu_get_regs(int vcpu_fd, struct kvm_m_regs *regs) {
+    if (!g_cpu_state_is_precise) {
+        // Probably OK to let execution continue
+        fprintf(stderr, "Getting register state in the middle of a translation block, eip/flags may be imprecise\n");
+    }
+
+#ifdef CONFIG_SYMBEX
+    RR_cpu(env, regs[R_EAX], regs->rax);
+    RR_cpu(env, regs[R_EBX], regs->rbx);
+    RR_cpu(env, regs[R_ECX], regs->rcx);
+    RR_cpu(env, regs[R_EDX], regs->rdx);
+    RR_cpu(env, regs[R_ESI], regs->rsi);
+    RR_cpu(env, regs[R_EDI], regs->rdi);
+    RR_cpu(env, regs[R_ESP], regs->rsp);
+    RR_cpu(env, regs[R_EBP], regs->rbp);
+    RR_cpu(env, regs[8], regs->r8);
+    RR_cpu(env, regs[9], regs->r9);
+    RR_cpu(env, regs[10], regs->r10);
+    RR_cpu(env, regs[11], regs->r11);
+    RR_cpu(env, regs[12], regs->r12);
+    RR_cpu(env, regs[13], regs->r13);
+    RR_cpu(env, regs[14], regs->r14);
+    RR_cpu(env, regs[15], regs->r15);
+#else
+    regs->regs[0] = env->regs[0];
+    regs->regs[1]= env->regs[1];
+    regs->regs[2] = env->regs[2];
+    regs->regs[3] = env->regs[3];
+    regs->regs[4] = env->regs[4];
+    regs->regs[5] = env->regs[5];
+    regs->regs[6] = env->regs[6];
+    regs->regs[7] = env->regs[7];
+    regs->regs[8] = env->regs[8];
+    regs->regs[9]= env->regs[9];
+    regs->regs[10] = env->regs[10];
+    regs->regs[11] = env->regs[11];
+    regs->regs[12] = env->regs[12];
+    regs->regs[13] = env->regs[13];
+    regs->regs[14] = env->regs[14];
+    regs->regs[15] = env->regs[15];
+#endif
+
+//    regs->rip = env->eip;
+//
+//    if (!g_handling_kvm_cb) {
+//        regs->rflags = cpu_get_eflags(env);
+//    } else {
+//        fprintf(stderr, "warning: kvm asking cpu state while handling io\n");
+//        // We must at least give the system flags to the KVM client, which
+//        // may use them to compute the segment registers.
+//        regs->rflags = env->mflags;
+//    }
+
+    return 0;
+}
+int s2e_kvm_vcpu_get_sregs(int vcpu_fd, struct kvm_m_sregs *sregs) {
+    // XXX: what about the interrupt bitmap?
+
+	sregs->other_sp = env->v7m.other_sp;
+	sregs->vecbase = env->v7m.vecbase;
+	sregs->basepri = env->v7m.basepri;
+	sregs->control = env->v7m.control;
+	sregs->current_sp = env->v7m.current_sp;
+	sregs->exception = env->v7m.exception;
+	sregs->pending_exception = env->v7m.pending_exception;
+	sregs->thumb = env->thumb;
+    return 0;
+}
+
