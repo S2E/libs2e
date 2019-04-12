@@ -17,10 +17,13 @@
 #define BIT(n) (1 << (n))
 #include <cpu/kvm.h>
 
+#ifdef CONFIG_SYMBEX
+#include <cpu/se_libcpu.h>
+#endif
 
 #include <cpu/arm/cpu.h>
 
-#include <cpu/se_libcpu.h>
+
 #include <timer.h>
 #include "s2e-kvm-interface.h"
 

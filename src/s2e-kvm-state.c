@@ -15,6 +15,9 @@
 #define BIT(n) (1 << (n))
 #include <cpu/kvm.h>
 
+#ifdef CONFIG_SYMBEX
+#include <cpu/se_libcpu.h>
+#endif
 #if defined(TARGET_I386) || defined(TARGET_X86_64)
 #include <cpu/i386/cpu.h>
 #elif defined(TARGET_ARM)
@@ -22,7 +25,7 @@
 #else
 #error Unsupported target architecture
 #endif
-#include <cpu/se_libcpu.h>
+
 #include <timer.h>
 #include "s2e-kvm-interface.h"
 

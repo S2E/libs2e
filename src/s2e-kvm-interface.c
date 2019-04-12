@@ -700,7 +700,6 @@ static void coroutine_fn s2e_kvm_cpu_coroutine(void *opaque) {
 
         g_cpu_state_is_precise = 0;
         env->exit_request = 0;
-        printf("cpu_exec begin\n");
 #if defined(TARGET_I386) || defined(TARGET_X86_64)
     cpu_x86_exec(env);
 #elif defined(TARGET_ARM)
@@ -804,7 +803,6 @@ int s2e_kvm_vcpu_run(int vcpu_fd) {
 
     g_handling_kvm_cb = 0;
     g_handling_dev_state = 0;
-    printf("KVM_RUN start\n");
     coroutine_enter(s_kvm_cpu_coroutine, NULL);
 
     if (s_s2e_exiting) {

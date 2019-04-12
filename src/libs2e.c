@@ -452,10 +452,10 @@ int ioctl(int fd, int request, uint64_t arg1) {
             ret = handle_kvm_vm_ioctl(fd, request, arg1);
         } else if (fd == g_kvm_vcpu_fd) {
 			#if defined(TARGET_I386) || defined(TARGET_X86_64)
-        	printf("ioctl vm %d request=%#x arg=%#"PRIx64" ret=%#x\n", fd, request, arg1, ret);
+        	//printf("ioctl vm %d request=%#x arg=%#"PRIx64" ret=%#x\n", fd, request, arg1, ret);
         	ret = handle_kvm_vcpu_ioctl(fd, request, arg1);
 			#elif defined(TARGET_ARM)
-        	printf("ioctl vm %d request=%#x arg=%#"PRIx64" ret=%#x\n", fd, request, arg1, ret);
+        	//printf("ioctl vm %d request=%#x arg=%#"PRIx64" ret=%#x\n", fd, request, arg1, ret);
         	ret = handle_kvm_vcpu_ioctl_arm(fd, request, arg1);
 			#else
 			#error Unsupported target architecture
