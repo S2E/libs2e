@@ -25,6 +25,7 @@ void __stl_mmu_trace(uint32_t *host_addr, target_ulong vaddr);
 void __stq_mmu_trace(uint64_t *host_addr, target_ulong vaddr);
 
 extern se_do_interrupt_all_t g_s2e_do_interrupt_all;
+extern se_do_interrupt_arm_t g_s2e_do_interrupt_arm;
 #endif
 
 void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
@@ -50,7 +51,7 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
     sqi->exec.switch_to_symbolic = s2e_switch_to_symbolic;
     sqi->exec.tb_exec = se_libcpu_tb_exec;
     sqi->exec.do_interrupt_all = g_s2e_do_interrupt_all;
-
+    sqi->exec.do_interrupt_arm = g_s2e_do_interrupt_arm;
     sqi->tb.tb_alloc = se_tb_alloc;
     sqi->tb.tb_free = se_tb_free;
     sqi->tb.flush_tb_cache = s2e_flush_tb_cache;

@@ -330,19 +330,19 @@ static int handle_kvm_vcpu_ioctl(int fd, int request, uint64_t arg1) {
 #elif defined(TARGET_ARM)
 static int handle_kvm_vcpu_ioctl_arm(int fd, int request, uint64_t arg1) {
     int ret = -1;
-    //printf("ioctl vm %d request=%#lx arg=%#"PRIx64" ret=%#x\n", fd, KVM_SET_SREGS, arg1, ret);
+    printf("ioctl vm %d request=%#x arg=%#"PRIx64" ret=%#x\n", fd, (uint32_t)request, arg1, ret);
     switch ((uint32_t) request) {
 		case KVM_RUN: {
 			return s2e_kvm_vcpu_run(fd);
 		} break;
-        case KVM_SET_REGS: {
+        case KVM_SET_M_REGS: {
             if (g_handling_dev_state) {
                 ret = 0;
             } else {
                 ret = s2e_kvm_vcpu_set_regs(fd, (struct kvm_m_regs *) arg1);
             }
         } break;
-        case KVM_SET_SREGS: {
+        case KVM_SET_M_SREGS: {
             if (g_handling_dev_state) {
                 ret = 0;
             } else {
@@ -356,7 +356,7 @@ static int handle_kvm_vcpu_ioctl_arm(int fd, int request, uint64_t arg1) {
 				ret = s2e_kvm_vcpu_set_mp_state(fd, (struct kvm_mp_state *) arg1);
 			}
 		} break;
-        case KVM_GET_REGS: {
+        case KVM_GET_M_REGS: {
             if (g_handling_dev_state) {
                 // Poison the returned registers to make sure we don't use
                 // it again by accident. We can't just fail the call because
@@ -368,7 +368,7 @@ static int handle_kvm_vcpu_ioctl_arm(int fd, int request, uint64_t arg1) {
             }
         } break;
 
-        case KVM_GET_SREGS: {
+        case KVM_GET_M_SREGS: {
             ret = s2e_kvm_vcpu_get_sregs(fd, (struct kvm_m_sregs *) arg1);
         } break;
 
