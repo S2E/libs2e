@@ -836,6 +836,7 @@ int s2e_kvm_vcpu_run(int vcpu_fd) {
 
     if (g_kvm_vcpu_buffer->exit_reason == -1) {
         if (env->halted) {
+            printf("cortex-m cpu halt!\n");
             g_kvm_vcpu_buffer->exit_reason = KVM_EXIT_HLT;
         } else if (g_kvm_vcpu_buffer->ready_for_interrupt_injection) {
             g_kvm_vcpu_buffer->exit_reason = KVM_EXIT_IRQ_WINDOW_OPEN;

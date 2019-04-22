@@ -203,6 +203,11 @@ static int handle_kvm_vm_ioctl(int fd, int request, uint64_t arg1) {
         case KVM_SET_CLOCK_SCALE: {
             ret = s2e_kvm_set_clock_scale_ptr(fd, (unsigned *) arg1);
         } break;
+        #if defined(TARGET_ARM)
+        case KVM_IRQ_LINE: {
+		    ret = s2e_kvm_vm_ioctl_irq_line(fd, (struct kvm_irq_level *) arg1);                                 
+        } break;
+        #endif
 
         default: {
             fprintf(stderr, "libs2e: unknown KVM VM IOCTL %x\n", request);
@@ -388,8 +393,8 @@ static int handle_kvm_vcpu_ioctl_arm(int fd, int request, uint64_t arg1) {
         // device state snapshotting.
     	case KVM_ARM_VCPU_INIT: {
     		ret = s2e_kvm_arch_vcpu_ioctl_vcpu_init(fd, (struct kvm_vcpu_init*)arg1);
-    		break;
-    	}
+    	}break;
+
         case KVM_SET_ONE_REG: {
             if (g_handling_dev_state) {
                 ret = 0;
@@ -413,7 +418,7 @@ static int handle_kvm_vcpu_ioctl_arm(int fd, int request, uint64_t arg1) {
         /***********************************************/
 
         default: {
-            fprintf(stderr, "libs2e: unknown KVM VCPU IOCTL vcpu %d request=%#x arg=%#" PRIx64 " ret=%#x\n", fd,
+            fprintf(stderr, "libs2e: unknown ARM KVM VCPU IOCTL vcpu %d request=%#x arg=%#" PRIx64 " ret=%#x\n", fd,
                     request, arg1, ret);
             exit(-1);
         }

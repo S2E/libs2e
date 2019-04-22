@@ -134,6 +134,7 @@ int s2e_kvm_vcpu_set_regs(int vcpu_fd, struct kvm_m_regs *regs);
 int s2e_kvm_vcpu_set_sregs(int vcpu_fd, struct kvm_m_sregs *sregs);
 int s2e_kvm_vcpu_get_regs(int vcpu_fd, struct kvm_m_regs *regs);
 int s2e_kvm_vcpu_get_sregs(int vcpu_fd, struct kvm_m_sregs *sregs);
+int s2e_kvm_vm_ioctl_irq_line(int vcpu_fd, struct kvm_irq_level *irq_level);
 
 #else
 #error Unsupported target architecture

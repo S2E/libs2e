@@ -335,7 +335,7 @@ int s2e_kvm_arch_vcpu_ioctl_vcpu_init(int vcpu_fd,struct kvm_vcpu_init *init)
 	if (ret)
 		return ret;
 */
-	return 0;
+	return -1;
 
 }
 
@@ -484,5 +484,16 @@ int s2e_kvm_vcpu_get_sregs(int vcpu_fd, struct kvm_m_sregs *sregs) {
 	sregs->pending_exception = env->v7m.pending_exception;
 	sregs->thumb = env->thumb;
     return 0;
+}
+int s2e_kvm_vm_ioctl_irq_line(int vcpu_fd, struct kvm_irq_level *irq_level){
+
+//	unsigned int irq = irq_level->irq;
+//	unsigned int irq_num;
+	bool level = irq_level->level;
+    arm_cpu_set_irq(env,level);   
+    return 0;
+	//irq_type = (irq >> KVM_ARM_IRQ_TYPE_SHIFT) & KVM_ARM_IRQ_TYPE_MASK;
+	//irq_num = (irq >> KVM_ARM_IRQ_NUM_SHIFT) & KVM_ARM_IRQ_NUM_MASK;
+
 }
 
