@@ -181,8 +181,9 @@ void S2EKVM::Init(void) {
 #ifdef CONFIG_SYMBEX
     g_s2e_shared_dir = getenv("S2E_SHARED_DIR");
     if (!g_s2e_shared_dir) {
-        fprintf(stderr, "Warning: S2E_SHARED_DIR environment variable was not specified, "
-                        "using %s\n",
+        fprintf(stderr,
+                "Warning: S2E_SHARED_DIR environment variable was not specified, "
+                "using %s\n",
                 CONFIG_LIBCPU_DATADIR);
         g_s2e_shared_dir = CONFIG_LIBCPU_DATADIR;
     }
@@ -502,5 +503,5 @@ int S2EKVM::ioctl(int fd, int request, uint64_t arg1) {
 
     return ret;
 }
-}
-}
+} // namespace kvm
+} // namespace s2e

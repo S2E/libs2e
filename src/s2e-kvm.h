@@ -53,6 +53,9 @@ private:
     void SendCpuExitSignal();
 
 public:
+    virtual ~S2EKVM() {
+    }
+
     static const char *s_cpuModel;
 
     static IFilePtr Create();
@@ -79,7 +82,7 @@ public:
         return m_cpuid;
     }
 };
-}
-}
+} // namespace kvm
+} // namespace s2e
 
 #endif

@@ -244,7 +244,7 @@ void VCPU::CoroutineFcn(void *opaque) {
         env->exit_request = 0;
         cpu_x86_exec(env);
         vcpu->m_cpuStateIsPrecise = true;
-// printf("cpu_exec return %#x\n", ret);
+        // printf("cpu_exec return %#x\n", ret);
 
 #ifdef SE_KVM_DEBUG_IRQ
         bool mflags_changed = (prev_mflags != env->mflags);
@@ -675,8 +675,8 @@ void *VCPU::sc_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t o
 void VCPU::FlushTlb() {
     tlb_flush(m_env, 1);
 }
-}
-}
+} // namespace kvm
+} // namespace s2e
 
 extern "C" {
 

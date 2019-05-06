@@ -27,6 +27,9 @@ private:
     }
 
 public:
+    virtual ~KVMTrace() {
+    }
+
     static IFilePtr Create();
 
     virtual int ioctl(int fd, int request, uint64_t arg1);
@@ -40,6 +43,8 @@ private:
     }
 
 public:
+    virtual ~KVMTraceVM() {
+    }
     static IFilePtr Create(int vm_fd);
     virtual int ioctl(int fd, int request, uint64_t arg1);
 };
@@ -52,11 +57,14 @@ private:
     }
 
 public:
+    virtual ~KVMTraceVCPU() {
+    }
+
     static IFilePtr Create(int vcpu_fd);
     virtual int ioctl(int fd, int request, uint64_t arg1);
     virtual void *sc_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
 };
-}
-}
+} // namespace kvm
+} // namespace s2e
 
 #endif

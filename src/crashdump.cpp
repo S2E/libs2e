@@ -24,8 +24,6 @@ uintptr_t s2e_get_host_address(target_phys_addr_t paddr);
 void generate_crashdump(void);
 }
 
-#include <llvm/Support/TimeValue.h>
-
 #include <sstream>
 #include <vmi/FileProvider.h>
 #include <vmi/WindowsCrashDumpGenerator.h>
@@ -181,7 +179,7 @@ void generate_crashdump(void) {
     X86RegisterProvider rp(env, readX86Register, NULL);
 
     std::stringstream ss;
-    ss << "crash-" << llvm::sys::TimeValue::now().seconds() << ".dmp";
+    ss << "crash-" << time(nullptr) << ".dmp";
 
     auto fp = FileSystemFileProvider::get(ss.str(), true);
     if (!fp) {

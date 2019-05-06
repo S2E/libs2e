@@ -340,5 +340,5 @@ int KVMTraceVCPU::ioctl(int fd, int request, uint64_t arg1) {
 
     return ret;
 }
-}
-}
+} // namespace kvm
+} // namespace s2e

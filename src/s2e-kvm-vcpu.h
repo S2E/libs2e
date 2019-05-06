@@ -79,6 +79,9 @@ private:
     VCPU(std::shared_ptr<S2EKVM> &kvm, std::shared_ptr<VM> &vm, kvm_run *buffer);
 
 public:
+    virtual ~VCPU() {
+    }
+
     static std::shared_ptr<VCPU> Create(std::shared_ptr<S2EKVM> &kvm, std::shared_ptr<VM> &vm);
 
     void SendExitSignal();
@@ -157,7 +160,7 @@ public:
 
     void FlushTlb();
 };
-}
-}
+} // namespace kvm
+} // namespace s2e
 
 #endif

@@ -29,6 +29,9 @@ private:
     }
 
 public:
+    virtual ~VM() {
+    }
+
     static std::shared_ptr<VM> Create(std::shared_ptr<S2EKVM> &kvm);
 
     void SendCpuExitSignal();
@@ -83,7 +86,7 @@ public:
 
     virtual int ioctl(int fd, int request, uint64_t arg1);
 };
-}
-}
+} // namespace kvm
+} // namespace s2e
 
 #endif

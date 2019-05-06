@@ -42,7 +42,7 @@ public:
 };
 
 extern SyscallEvents g_syscalls;
-}
+} // namespace s2e
 
 extern "C" {
 extern exit_t g_original_exit;
