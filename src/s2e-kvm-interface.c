@@ -137,7 +137,7 @@ static void *timer_cb(void *param) {
         if (timers_state.cpu_clock_scale_factor == 1) {
             // Required for shutdown, otherwise kvm clients may get stuck
             // Also required to give a chance timers to run
-            s2e_kvm_send_cpu_exit_signal();
+           /*  s2e_kvm_send_cpu_exit_signal(); */
         }
     }
 
@@ -700,13 +700,13 @@ static void coroutine_fn s2e_kvm_cpu_coroutine(void *opaque) {
 
         g_cpu_state_is_precise = 0;
         env->exit_request = 0;
-#if defined(TARGET_I386) || defined(TARGET_X86_64)
-    cpu_x86_exec(env);
-#elif defined(TARGET_ARM)
-    cpu_arm_exec(env);
-#else
-#error Unsupported target architecture
-#endif
+    #if defined(TARGET_I386) || defined(TARGET_X86_64)
+        cpu_x86_exec(env);
+    #elif defined(TARGET_ARM)
+        cpu_arm_exec(env);
+    #else
+    #error Unsupported target architecture
+    #endif
 
 
 
@@ -725,7 +725,7 @@ static void coroutine_fn s2e_kvm_cpu_coroutine(void *opaque) {
 
         assert(env->current_tb == NULL);
 
-        env->exception_index = 0;
+        env->exception_index = -1;
         coroutine_yield();
     }
 }

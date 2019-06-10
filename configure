@@ -172,7 +172,7 @@ rm -f config.log
 echo "# libs2e configured with:" >> config.log
 printf " '%s'" "$0" "$@" >> config.log
 
-BUILD_DIR="$(pwd)"
+BUILD_DIR="/opt/s2earm/build/s2e/libs2e-release"
 cd "$(dirname $0)"
 SRC_DIR="$(pwd)"
 

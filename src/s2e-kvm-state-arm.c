@@ -412,6 +412,7 @@ int s2e_kvm_vcpu_set_sregs(int vcpu_fd, struct kvm_m_sregs *sregs) {
 	env->v7m.exception = sregs->exception;
 	env->v7m.pending_exception = sregs->pending_exception;
 	env->thumb = sregs->thumb;
+    env->nvic = sregs->nvic;
 	printf("other_sp=%#x\n",env->v7m.other_sp);
 	printf("thumb=%#x\n", env->thumb);
     return 0;
@@ -442,7 +443,7 @@ int s2e_kvm_vcpu_get_regs(int vcpu_fd, struct kvm_m_regs *regs) {
     RR_cpu(env, regs[15], regs->r15);
 #else
     regs->regs[0] = env->regs[0];
-    regs->regs[1]= env->regs[1];
+    regs->regs[1] = env->regs[1];
     regs->regs[2] = env->regs[2];
     regs->regs[3] = env->regs[3];
     regs->regs[4] = env->regs[4];
@@ -450,7 +451,7 @@ int s2e_kvm_vcpu_get_regs(int vcpu_fd, struct kvm_m_regs *regs) {
     regs->regs[6] = env->regs[6];
     regs->regs[7] = env->regs[7];
     regs->regs[8] = env->regs[8];
-    regs->regs[9]= env->regs[9];
+    regs->regs[9] = env->regs[9];
     regs->regs[10] = env->regs[10];
     regs->regs[11] = env->regs[11];
     regs->regs[12] = env->regs[12];
