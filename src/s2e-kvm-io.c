@@ -178,6 +178,8 @@ void s2e_kvm_mmio_write(target_phys_addr_t addr, uint64_t data, unsigned size) {
     if (is_apic_tpr_access) {
         cpu_exit(env);
     }
+#else
+    cpu_exit(env);
 #endif
 }
 
