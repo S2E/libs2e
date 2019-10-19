@@ -449,3 +449,12 @@ int s2e_kvm_vcpu_get_sregs(int vcpu_fd, struct kvm_m_sregs *sregs) {
 }
 
 
+int s2e_kvm_vm_ioctl_irq_line(int vcpu_fd, struct kvm_irq_level *irq_level) {
+
+	bool level = irq_level->level;
+    arm_cpu_set_irq(env,level);   
+    return 0;
+
+}
+
+
