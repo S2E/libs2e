@@ -15,7 +15,14 @@
 #include <timer.h>
 
 #include <cpu/cpu-common.h>
+
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 #include <cpu/i386/cpu.h>
+#elif defined(TARGET_ARM)
+#include <cpu/arm/cpu.h>
+#else
+#error Unsupported target architecture
+#endif
 #include <cpu/ioport.h>
 #include <cpu/kvm.h>
 
@@ -34,7 +41,7 @@
 
 extern void *g_s2e;
 
-extern CPUX86State *env;
+extern CPUArchState *env;
 
 namespace s2e {
 namespace kvm {
@@ -44,6 +51,7 @@ struct stats_t g_stats;
 
 static const int MAX_MEMORY_SLOTS = 32;
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 // clang-format off
 static uint32_t s_msr_list [] = {
     MSR_IA32_SYSENTER_CS,
@@ -104,6 +112,7 @@ static uint32_t s_msr_list [] = {
 #define KVM_CPUID_FEATURES 0x40000001
 #define KVM_FEATURE_CLOCKSOURCE 0
 
+
 /* Array of valid (function, index) entries */
 static uint32_t s_cpuid_entries[][2] = {
     {0, (uint32_t) -1},
@@ -136,13 +145,17 @@ static uint32_t s_cpuid_entries[][2] = {
     {0xc0000003, (uint32_t) -1},
     {0xc0000004, (uint32_t) -1}
 };
-// clang-format on
+#endif
 
+// clang-format on
 #if defined(TARGET_X86_64)
 const char *S2EKVM::s_cpuModel = "qemu64-s2e";
 const bool S2EKVM::s_is64 = true;
 #elif defined(TARGET_I386)
 const char *S2EKVM::s_cpuModel = "qemu32-s2e";
+const bool S2EKVM::s_is64 = false;
+#elif defined(TARGET_ARM)
+const char *S2EKVM::s_cpuModel = "cortex-m3";
 const bool S2EKVM::s_is64 = false;
 #else
 #error unknown architecture
@@ -194,13 +207,14 @@ std::string S2EKVM::getBitcodeLibrary(const std::string &dir) {
 #endif
 
 void S2EKVM::init(void) {
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     x86_cpudef_setup();
     printf("Initializing %s cpu\n", s_cpuModel);
     if (cpu_x86_register(&m_cpuid, s_cpuModel, s_is64) < 0) {
         fprintf(stderr, "Could not register CPUID for model %s\n", s_cpuModel);
         exit(-1);
     }
-
+#endif
     initLogLevel();
 
 #ifdef CONFIG_SYMBEX
@@ -364,6 +378,7 @@ int S2EKVM::getVCPUMemoryMapSize(void) {
     return 0x10000; /* Some magic value */
 }
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 int S2EKVM::getMSRIndexList(struct kvm_msr_list *list) {
     if (list->nmsrs == 0) {
         list->nmsrs = sizeof(s_msr_list) / sizeof(s_msr_list[0]);
@@ -431,7 +446,7 @@ int S2EKVM::getSupportedCPUID(struct kvm_cpuid2 *cpuid) {
 
     return 0;
 }
-
+#endif
 void S2EKVM::sendCpuExitSignal() {
     assert(m_vm);
     m_vm->sendCpuExitSignal();
@@ -519,6 +534,7 @@ int S2EKVM::sys_ioctl(int fd, int request, uint64_t arg1) {
             ret = getVCPUMemoryMapSize();
         } break;
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
         case KVM_GET_MSR_INDEX_LIST: {
             ret = getMSRIndexList((kvm_msr_list *) arg1);
         } break;
@@ -526,7 +542,7 @@ int S2EKVM::sys_ioctl(int fd, int request, uint64_t arg1) {
         case KVM_GET_SUPPORTED_CPUID: {
             ret = getSupportedCPUID((kvm_cpuid2 *) arg1);
         } break;
-
+#endif
         default: {
             fprintf(stderr, "libs2e: unknown KVM IOCTL %x\n", request);
             exit(-1);

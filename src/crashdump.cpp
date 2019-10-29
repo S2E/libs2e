@@ -11,6 +11,7 @@
 extern "C" {
 #include <cpu/cpu-common.h>
 #include <cpu/exec.h>
+
 #include <cpu/i386/cpu.h>
 #include <cpu/memory.h>
 #include <cpu/types.h>

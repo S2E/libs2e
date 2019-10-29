@@ -13,7 +13,14 @@
 #include <timer.h>
 
 #include <cpu/cpu-common.h>
+
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 #include <cpu/i386/cpu.h>
+#elif defined(TARGET_ARM)
+#include <cpu/arm/cpu.h>
+#else
+#error Unsupported target architecture
+#endif
 #include <cpu/ioport.h>
 
 #ifdef CONFIG_SYMBEX
@@ -27,7 +34,9 @@
 #endif
 
 #include "libs2e.h"
+
 #include "s2e-kvm-vcpu.h"
+
 #include "s2e-kvm-vm.h"
 #include "s2e-kvm.h"
 
@@ -223,6 +232,7 @@ int VM::setClockScalePointer(unsigned *scale) {
 
 int VM::sys_ioctl(int fd, int request, uint64_t arg1) {
     int ret = -1;
+
     switch ((uint32_t) request) {
         case KVM_CHECK_EXTENSION:
             ret = m_kvm->checkExtension(arg1);
@@ -291,7 +301,12 @@ int VM::sys_ioctl(int fd, int request, uint64_t arg1) {
         case KVM_SET_CLOCK_SCALE: {
             ret = setClockScalePointer((unsigned *) arg1);
         } break;
-
+#if defined(TARGET_ARM)
+        case KVM_IRQ_LINE: {
+            m_cpu->setIrqLine((kvm_irq_level *) arg1);
+            ret = 0;
+        } break;
+#endif
         default: {
             fprintf(stderr, "libs2e: unknown KVM VM IOCTL %x\n", request);
             exit(-1);
