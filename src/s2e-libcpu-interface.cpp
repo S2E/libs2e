@@ -66,7 +66,9 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
 
     sqi->regs.read_concrete = s2e_read_register_concrete;
     sqi->regs.write_concrete = s2e_write_register_concrete;
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     sqi->regs.set_cc_op_eflags = s2e_set_cc_op_eflags;
+#endif
 
     sqi->mem.read_dirty_mask = se_read_dirty_mask;
     sqi->mem.write_dirty_mask = se_write_dirty_mask;
