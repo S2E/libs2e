@@ -106,17 +106,21 @@ int VM::setTSSAddress(uint64_t tss_addr) {
 }
 
 int VM::setUserMemoryRegion(kvm_userspace_memory_region *region) {
-    m_cpu->requestExit();
+    if (m_cpu) {
+        m_cpu->requestExit();
 
-    m_cpu->lock();
+        m_cpu->lock();
 
-    assert(!m_cpu->inKvmRun());
-    m_cpu->flushTlb();
-    mem_desc_unregister(region->slot);
-    mem_desc_register(region);
+        assert(!m_cpu->inKvmRun());
+        m_cpu->flushTlb();
+        mem_desc_unregister(region->slot);
+        mem_desc_register(region);
 
-    m_cpu->unlock();
-
+        m_cpu->unlock();
+    } else {
+        mem_desc_unregister(region->slot);
+        mem_desc_register(region);
+    }
     return 0;
 }
 
