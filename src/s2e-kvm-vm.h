@@ -76,6 +76,9 @@ private:
     int deviceSnapshot(kvm_dev_snapshot *s);
     int setClockScalePointer(unsigned *scale);
 
+#if defined(TARGET_ARM)
+    int setIrqLine(kvm_irq_level *irq_level);
+#endif
 public:
     virtual ~VM() {
     }

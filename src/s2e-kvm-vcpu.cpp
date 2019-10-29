@@ -9,7 +9,14 @@
 #include <memory.h>
 
 #include <cpu/exec.h>
+
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 #include <cpu/i386/cpu.h>
+#elif defined(TARGET_ARM)
+#include <cpu/arm/cpu.h>
+#else
+#error Unsupported target architecture
+#endif
 #include <timer.h>
 
 #ifdef CONFIG_SYMBEX
@@ -23,6 +30,7 @@
 #endif
 
 #include "s2e-kvm-vcpu.h"
+
 #include "syscalls.h"
 
 #define BIT(n) (1 << (n))
@@ -30,10 +38,9 @@
 // Convenience variable to help debugging in gdb.
 // env is present in both inside qemu and libs2e, which
 // causes confusion.
-CPUX86State *g_cpu_env;
 
-// TODO: remove this global var from libcpu
-extern CPUX86State *env;
+CPUArchState *g_cpu_env;
+extern CPUArchState *env;
 
 namespace s2e {
 namespace kvm {
@@ -62,22 +69,35 @@ VCPU::VCPU(std::shared_ptr<S2EKVM> &kvm, std::shared_ptr<VM> &vm, kvm_run *buffe
         exit(-1);
     }
 
-    /* We want the default libcpu CPU, not the KVM one. */
+/* We want the default libcpu CPU, not the KVM one. */
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     m_env = g_cpu_env = env = cpu_x86_init(&m_kvm->getCpuid());
-
+#elif defined(TARGET_ARM)
+    m_env = g_cpu_env = env = cpu_arm_init("cortex-m3");
+#else
+#error unknown architecture
+#endif
     if (!m_env) {
         printf("Could not create cpu\n");
         exit(-1);
     }
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     m_env->v_apic_base = 0xfee00000;
+#endif
     m_env->size = sizeof(*m_env);
 
 #ifdef CONFIG_SYMBEX
     s2e_register_cpu(m_env);
 #endif
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     do_cpu_init(m_env);
+#elif defined(TARGET_ARM)
+    do_cpu_arm_init(m_env);
+#else
+#error Unsupported target architecture
+#endif
 
     cpu_exec_init_all();
 }
@@ -130,6 +150,7 @@ int VCPU::getClock(kvm_clock_data *clock) {
     assert(false && "Not implemented");
 }
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 int VCPU::setCPUID2(kvm_cpuid2 *cpuid) {
 /**
  * QEMU insists on using host cpuid flags when running in KVM mode.
@@ -168,6 +189,7 @@ int VCPU::setCPUID2(kvm_cpuid2 *cpuid) {
 
     return 0;
 }
+#endif
 
 void VCPU::cpuExitSignal(int signum) {
     s_vcpu->m_env->kvm_request_interrupt_window = 1;
@@ -211,7 +233,13 @@ int VCPU::setSignalMask(kvm_signal_mask *mask) {
 
 void VCPU::coroutineFcn(void *opaque) {
     VCPU *vcpu = reinterpret_cast<VCPU *>(opaque);
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     CPUX86State *env = vcpu->m_env;
+#elif defined(TARGET_ARM)
+    CPUARMState *env = vcpu->m_env;
+#else
+#error Unsupported target architecture
+#endif
     auto buffer = vcpu->m_cpuBuffer;
 
 #ifdef SE_KVM_DEBUG_IRQ
@@ -248,7 +276,15 @@ void VCPU::coroutineFcn(void *opaque) {
 
         vcpu->m_cpuStateIsPrecise = false;
         env->exit_request = 0;
+
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
         cpu_x86_exec(env);
+#elif defined(TARGET_ARM)
+        cpu_arm_exec(env);
+#else
+#error Unsupported target architecture
+#endif
+
         vcpu->m_cpuStateIsPrecise = true;
 // printf("cpu_exec return %#x\n", ret);
 
@@ -264,7 +300,7 @@ void VCPU::coroutineFcn(void *opaque) {
 
         assert(env->current_tb == NULL);
 
-        env->exception_index = 0;
+        env->exception_index = -1;
         coroutine_yield();
     }
 }
@@ -294,11 +330,12 @@ int VCPU::run(int vcpu_fd) {
         errno = EINTR;
         return -1;
     }
-
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     /* Return asap if interrupts can be injected */
     m_cpuBuffer->if_flag = (m_env->mflags & IF_MASK) != 0;
     m_cpuBuffer->apic_base = m_env->v_apic_base;
     m_cpuBuffer->cr8 = m_env->v_tpr;
+#endif
 
     m_cpuBuffer->ready_for_interrupt_injection = !m_handlingKvmCallback && m_cpuBuffer->request_interrupt_window &&
                                                  m_cpuBuffer->if_flag && (m_env->kvm_irq == -1);
@@ -324,14 +361,16 @@ int VCPU::run(int vcpu_fd) {
 
     m_cpuBuffer->exit_reason = -1;
 
-    /**
-     * Some KVM clients do not set this when calling kvm_run, although the KVM
-     * spec says they should. For now, we patch the clients to pass the right value.
-     * Eventually, we'll need to figure out how KVM handles it.
-     * Having an incorrect (null) APIC base will cause the APIC to get stuck.
-     */
+/**
+ * Some KVM clients do not set this when calling kvm_run, although the KVM
+ * spec says they should. For now, we patch the clients to pass the right value.
+ * Eventually, we'll need to figure out how KVM handles it.
+ * Having an incorrect (null) APIC base will cause the APIC to get stuck.
+ */
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     m_env->v_apic_base = m_cpuBuffer->apic_base;
     m_env->v_tpr = m_cpuBuffer->cr8;
+#endif
 
     m_handlingKvmCallback = false;
     m_handlingDeviceState = false;
@@ -346,18 +385,22 @@ int VCPU::run(int vcpu_fd) {
         return -1;
     }
 
+    // add exit reason for msr basepri
+    if (m_env->kvm_exit_code == 1) {
+        m_cpuBuffer->exit_reason = KVM_EXIT_SYNC_ARM_V7M_SREGS;
+    }
     m_handlingKvmCallback =
         m_cpuBuffer->exit_reason == KVM_EXIT_IO || m_cpuBuffer->exit_reason == KVM_EXIT_MMIO ||
         m_cpuBuffer->exit_reason == KVM_EXIT_FLUSH_DISK || m_cpuBuffer->exit_reason == KVM_EXIT_SAVE_DEV_STATE ||
         m_cpuBuffer->exit_reason == KVM_EXIT_RESTORE_DEV_STATE || m_cpuBuffer->exit_reason == KVM_EXIT_CLONE_PROCESS;
 
-    // Might not be NULL if resuming from an interrupted I/O
-    // assert(env->current_tb == NULL);
-
+// Might not be NULL if resuming from an interrupted I/O
+// assert(env->current_tb == NULL);
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
     m_cpuBuffer->if_flag = (m_env->mflags & IF_MASK) != 0;
     m_cpuBuffer->apic_base = m_env->v_apic_base;
     m_cpuBuffer->cr8 = m_env->v_tpr;
-
+#endif
     // KVM specs says that we should also check for request for interrupt window,
     // but that causes missed interrupts.
     m_cpuBuffer->ready_for_interrupt_injection = !m_handlingKvmCallback && m_cpuBuffer->request_interrupt_window &&
@@ -407,6 +450,7 @@ int VCPU::run(int vcpu_fd) {
     return ret;
 }
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 int VCPU::interrupt(kvm_interrupt *interrupt) {
 #ifdef SE_KVM_DEBUG_IRQ
     printf("IRQ %d env->mflags=%lx hflags=%x hflags2=%x ptr=%#x\n", interrupt->irq, (uint64_t) env->mflags, env->hflags,
@@ -431,6 +475,7 @@ int VCPU::nmi() {
     m_env->interrupt_request |= CPU_INTERRUPT_NMI;
     return 0;
 }
+#endif
 
 void VCPU::flushDisk(void) {
     g_kvm_vcpu_buffer->exit_reason = KVM_EXIT_FLUSH_DISK;
@@ -557,6 +602,7 @@ void VCPU::requestProcessExit(int code) {
     abort();
 }
 
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 int VCPU::sys_ioctl(int fd, int request, uint64_t arg1) {
     int ret = -1;
     switch ((uint32_t) request) {
@@ -669,6 +715,94 @@ int VCPU::sys_ioctl(int fd, int request, uint64_t arg1) {
 
     return ret;
 }
+#elif defined(TARGET_ARM)
+int VCPU::sys_ioctl(int fd, int request, uint64_t arg1) {
+    int ret = -1;
+    printf("ioctl vm %d request=%#x arg=%#" PRIx64 " ret=%#x\n", fd, (uint32_t) request, arg1, ret);
+    switch ((uint32_t) request) {
+        case KVM_RUN: {
+            return run(fd);
+        } break;
+        case KVM_SET_M_REGS: {
+            if (m_handlingDeviceState) {
+                ret = 0;
+            } else {
+                ret = setRegs((kvm_m_regs *) arg1);
+            }
+        } break;
+        case KVM_SET_M_SREGS: {
+            if (m_handlingDeviceState) {
+                ret = 0;
+            } else {
+                ret = setSRegs((kvm_m_sregs *) arg1);
+            }
+        } break;
+        case KVM_SET_MP_STATE: {
+            if (m_handlingDeviceState) {
+                ret = 0;
+            } else {
+                ret = setMPState((kvm_mp_state *) arg1);
+            }
+        } break;
+        case KVM_GET_M_REGS: {
+            if (m_handlingDeviceState) {
+                // Poison the returned registers to make sure we don't use
+                // it again by accident. We can't just fail the call because
+                // the client needs it to save the cpu state (that we ignore).
+                memset((void *) arg1, 0xff, sizeof(kvm_m_regs));
+                ret = 0;
+            } else {
+                ret = getRegs((kvm_m_regs *) arg1);
+            }
+        } break;
+
+        case KVM_GET_M_SREGS: {
+            ret = getSRegs((kvm_m_sregs *) arg1);
+        } break;
+
+        case KVM_GET_MP_STATE: {
+            ret = getMPState((kvm_mp_state *) arg1);
+        } break;
+        case KVM_SET_SIGNAL_MASK: {
+            ret = setSignalMask((kvm_signal_mask *) arg1);
+        } break;
+
+        case KVM_ARM_VCPU_INIT: {
+            ret = init((kvm_vcpu_init *) arg1);
+        } break;
+
+        case KVM_SET_ONE_REG: {
+            if (m_handlingDeviceState) {
+                ret = 0;
+            } else {
+                ret = setOneReg((kvm_one_reg *) arg1);
+            }
+        } break;
+
+        case KVM_GET_ONE_REG: {
+            if (m_handlingDeviceState) {
+                // Poison the returned registers to make sure we don't use
+                // it again by accident. We can't just fail the call because
+                // the client needs it to save the cpu state (that we ignore).
+                memset((void *) arg1, 0xff, sizeof(struct kvm_one_reg));
+                ret = 0;
+            } else {
+                ret = getOneReg((kvm_one_reg *) arg1);
+            }
+        } break;
+
+        default: {
+            fprintf(stderr, "libs2e: unknown ARM KVM VCPU IOCTL vcpu %d request=%#x arg=%#" PRIx64 " ret=%#x\n", fd,
+                    request, arg1, ret);
+            exit(-1);
+        }
+    }
+
+    return ret;
+}
+#else
+#error Unsupported target architecture
+#endif
 
 void *VCPU::sys_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset) {
     int real_size = S2EKVM::getVCPUMemoryMapSize();

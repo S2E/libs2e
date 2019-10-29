@@ -19,13 +19,14 @@ add_library(
 elseif(WITH_TARGET MATCHES "arm")
 add_library(
     s2e SHARED
-    libs2e.c
-    s2e-kvm-interface.c
-    s2e-kvm-io.c
-    s2e-kvm-state-arm.c
-	s2e-kvm-libcpu-stubs-arm.c
-    s2e-kvm-trace.c
-    s2e-libcpu-interface.c
+    libs2e.cpp
+    s2e-kvm-io.cpp
+    s2e-kvm-state-arm.cpp
+    s2e-kvm-trace.cpp
+    s2e-kvm.cpp
+    s2e-kvm-vm.cpp
+    s2e-kvm-vcpu.cpp
+    s2e-libcpu-interface.cpp
 )
 else()
     message(FATAL_ERROR "Incorrect target ${WITH_TARGET}")

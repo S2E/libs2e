@@ -54,6 +54,7 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
     sqi->exec.tb_exec = se_libcpu_tb_exec;
     sqi->exec.do_interrupt_all = g_s2e_do_interrupt_all;
     sqi->exec.do_interrupt_arm = g_s2e_do_interrupt_arm;
+
     sqi->tb.tb_alloc = se_tb_alloc;
     sqi->tb.tb_free = se_tb_free;
     sqi->tb.flush_tb_cache = s2e_flush_tb_cache;
@@ -134,6 +135,8 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
     sqi->events.tcg_execution_handler = s2e_tcg_execution_handler;
     sqi->events.tcg_custom_instruction_handler = s2e_tcg_custom_instruction_handler;
     sqi->events.tcg_emit_custom_instruction = s2e_tcg_emit_custom_instruction;
+
+    //sqi->events.tcg_make_peripheral_symbolic = s2e_tcg_make_peripheral_symbolic;
 
     sqi->events.on_translate_soft_interrupt_start = s2e_on_translate_soft_interrupt_start;
     sqi->events.on_translate_block_start = s2e_on_translate_block_start;
