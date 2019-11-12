@@ -321,6 +321,7 @@ cmake -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX"  \
     -DLIBQ_DIR=$LIBQ_DIR                                    \
     -DLUA_DIR=$LIBLUA_LIB                                   \
     -DS2EGUEST_INCLUDE_DIR=$S2EGUEST_INCDIR                 \
+    -DWITH_TARGET="$target"                                 \
     "$LIBS2EPLUGINS_SRC"
 
 if [ $? -ne 0 ]; then
