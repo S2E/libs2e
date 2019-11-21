@@ -48,7 +48,6 @@ int VCPU::setRegs(kvm_m_regs *regs) {
     WR_cpu(m_env, regs[12], regs->regs[12]);
     WR_cpu(m_env, regs[13], regs->regs[13]);
     WR_cpu(m_env, regs[14], regs->regs[14]);
-    WR_cpu(m_env, regs[15], regs->regs[15]);
 #else
     m_env->regs[0] = regs->regs[0];
     m_env->regs[1] = regs->regs[1];
@@ -65,15 +64,15 @@ int VCPU::setRegs(kvm_m_regs *regs) {
     m_env->regs[12] = regs->regs[12];
     m_env->regs[13] = regs->regs[13];
     m_env->regs[14] = regs->regs[14];
+#endif
     m_env->regs[15] = regs->regs[15];
     printf("r15=%#x\n", m_env->regs[15]);
-#endif
 
     return 0;
 }
 
 int VCPU::setSRegs(kvm_m_sregs *sregs) {
-    // XXX: what about the interrupt bitmap?
+    // XXX: what about the nvic interrupt controller ?
     m_env->v7m.other_sp = sregs->other_sp;
     m_env->v7m.vecbase = sregs->vecbase;
     m_env->v7m.basepri = sregs->basepri;
@@ -131,7 +130,6 @@ int VCPU::getRegs(kvm_m_regs *regs) {
     RR_cpu(m_env, regs[12], regs->regs[12]);
     RR_cpu(m_env, regs[13], regs->regs[13]);
     RR_cpu(m_env, regs[14], regs->regs[14]);
-    RR_cpu(m_env, regs[15], regs->regs[15]);
 #else
     regs->regs[0] = m_env->regs[0];
     regs->regs[1] = m_env->regs[1];
@@ -148,9 +146,9 @@ int VCPU::getRegs(kvm_m_regs *regs) {
     regs->regs[12] = m_env->regs[12];
     regs->regs[13] = m_env->regs[13];
     regs->regs[14] = m_env->regs[14];
-    regs->regs[15] = m_env->regs[15];
 #endif
 
+    regs->regs[15] = m_env->regs[15];
     return 0;
 }
 
@@ -165,8 +163,7 @@ int VCPU::getSRegs(kvm_m_sregs *sregs) {
     sregs->thumb = m_env->thumb;
     printf("sregs basepri=%#x\n", sregs->basepri);
     printf("sregs control=%#x\n", sregs->control);
-    // sregs have been synced, so reset the exit code
-    m_env->kvm_exit_code = 0;
+
     return 0;
 }
 
@@ -387,5 +384,6 @@ int VCPU::setIrqLine(kvm_irq_level *irq_level) {
     arm_cpu_set_irq(m_env, level);
     return 0;
 }
+
 }
 }

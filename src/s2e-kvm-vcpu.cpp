@@ -390,10 +390,6 @@ int VCPU::run(int vcpu_fd) {
         return -1;
     }
 
-    // add exit reason for msr basepri
-    if (m_env->kvm_exit_code == 1) {
-        m_cpuBuffer->exit_reason = KVM_EXIT_SYNC_ARM_V7M_SREGS;
-    }
     m_handlingKvmCallback =
         m_cpuBuffer->exit_reason == KVM_EXIT_IO || m_cpuBuffer->exit_reason == KVM_EXIT_MMIO ||
         m_cpuBuffer->exit_reason == KVM_EXIT_FLUSH_DISK || m_cpuBuffer->exit_reason == KVM_EXIT_SAVE_DEV_STATE ||
@@ -845,4 +841,5 @@ void s2e_kvm_restore_device_state(void) {
 void s2e_kvm_clone_process(void) {
     s2e::kvm::s_vcpu->cloneProcess();
 }
+
 }
