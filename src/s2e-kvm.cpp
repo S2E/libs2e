@@ -287,7 +287,8 @@ void S2EKVM::initLogLevel(void) {
 
     const char *libcpu_log_file = getenv("LIBCPU_LOG_FILE");
     if (libcpu_log_file) {
-        logfile = fopen(libcpu_log_file, "w");
+        //logfile = fopen(libcpu_log_file, "w");
+        logfile = freopen(libcpu_log_file, "w", stdout);
         if (!logfile) {
             printf("Could not open log file %s\n", libcpu_log_file);
             exit(-1);
