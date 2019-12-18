@@ -194,6 +194,7 @@ public:
     void flushDisk(void);
     void saveDeviceState(void);
     void restoreDeviceState(void);
+    void syncSRegs(void);
     void cloneProcess(void);
 
 #if defined(TARGET_ARM)

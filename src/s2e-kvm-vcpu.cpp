@@ -393,7 +393,8 @@ int VCPU::run(int vcpu_fd) {
     m_handlingKvmCallback =
         m_cpuBuffer->exit_reason == KVM_EXIT_IO || m_cpuBuffer->exit_reason == KVM_EXIT_MMIO ||
         m_cpuBuffer->exit_reason == KVM_EXIT_FLUSH_DISK || m_cpuBuffer->exit_reason == KVM_EXIT_SAVE_DEV_STATE ||
-        m_cpuBuffer->exit_reason == KVM_EXIT_RESTORE_DEV_STATE || m_cpuBuffer->exit_reason == KVM_EXIT_CLONE_PROCESS;
+        m_cpuBuffer->exit_reason == KVM_EXIT_RESTORE_DEV_STATE || m_cpuBuffer->exit_reason == KVM_EXIT_CLONE_PROCESS ||
+        m_cpuBuffer->exit_reason == KVM_EXIT_SYNC_SREGS;
 
 // Might not be NULL if resuming from an interrupted I/O
 // assert(env->current_tb == NULL);
@@ -501,6 +502,12 @@ void VCPU::restoreDeviceState(void) {
 #endif
     g_kvm_vcpu_buffer->exit_reason = KVM_EXIT_RESTORE_DEV_STATE;
     m_handlingDeviceState = 1;
+    coroutine_yield();
+}
+
+void VCPU::syncSRegs(void) {
+    g_kvm_vcpu_buffer->exit_reason = KVM_EXIT_SYNC_SREGS;
+    m_handlingDeviceState = true;
     coroutine_yield();
 }
 
@@ -836,6 +843,10 @@ void s2e_kvm_save_device_state(void) {
 
 void s2e_kvm_restore_device_state(void) {
     s2e::kvm::s_vcpu->restoreDeviceState();
+}
+
+void s2e_kvm_sync_sregs(void) {
+    s2e::kvm::s_vcpu->syncSRegs();
 }
 
 void s2e_kvm_clone_process(void) {
