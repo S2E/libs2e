@@ -78,6 +78,7 @@ private:
 
 #if defined(TARGET_ARM)
     int setIrqLine(kvm_irq_level *irq_level);
+    int initMemRegions(kvm_mem_init *mem_init);
 #endif
 public:
     virtual ~VM() {
