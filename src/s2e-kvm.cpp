@@ -331,6 +331,7 @@ int S2EKVM::checkExtension(int capability) {
         case KVM_CAP_MEM_FIXED_REGION:
         case KVM_CAP_DISK_RW:
         case KVM_CAP_CPU_CLOCK_SCALE:
+        case KVM_CAP_USER_CUSTOM_MEM_REGION:
             return 1;
 #endif
 
