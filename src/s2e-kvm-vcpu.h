@@ -157,6 +157,7 @@ private:
     int getSRegs(kvm_m_sregs *sregs);
     int getOneReg(kvm_one_reg *reg);
     int getMPState(kvm_mp_state *mp);
+    int customMInit(kvm_m_vcpu_init *firmware_init);
 
     inline long copy_from_user(void *to, const void *from, unsigned long n);
     inline long copy_to_user(void *to, const void *from, unsigned long n);

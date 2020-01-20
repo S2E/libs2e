@@ -523,6 +523,16 @@ void VCPU::cloneProcess(void) {
     }
 }
 
+int VCPU::customMInit(kvm_m_vcpu_init *firmware_init) {
+    int ret;
+    ret = s2e_init_firmware(&firmware_init->entry, &firmware_init->msp_init, &firmware_init->vtor);
+    if (ret < 0) {
+        errno = 1;
+    }
+
+    return ret;
+}
+
 ///
 /// \brief s2e_kvm_send_cpu_exit_signal sends a signal
 /// to the cpu loop thread in order to exit the cpu loop.
@@ -756,6 +766,11 @@ int VCPU::sys_ioctl(int fd, int request, uint64_t arg1) {
                 ret = setMPState((kvm_mp_state *) arg1);
             }
         } break;
+
+        case KVM_CUSTOM_M_INIT: {
+            ret = customMInit((kvm_m_vcpu_init *) arg1);
+        } break;
+
         case KVM_GET_M_REGS: {
             if (m_handlingDeviceState) {
                 // Poison the returned registers to make sure we don't use
