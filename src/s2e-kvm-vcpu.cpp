@@ -740,7 +740,7 @@ int VCPU::sys_ioctl(int fd, int request, uint64_t arg1) {
 #elif defined(TARGET_ARM)
 int VCPU::sys_ioctl(int fd, int request, uint64_t arg1) {
     int ret = -1;
-    printf("ioctl vm %d request=%#x arg=%#" PRIx64 " ret=%#x\n", fd, (uint32_t) request, arg1, ret);
+
     switch ((uint32_t) request) {
         case KVM_RUN: {
             return run(fd);
