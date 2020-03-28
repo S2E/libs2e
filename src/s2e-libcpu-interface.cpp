@@ -47,6 +47,9 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
     sqi->mode.allow_custom_instructions = &g_s2e_allow_custom_instructions;
     sqi->mode.concretize_io_writes = &g_s2e_concretize_io_writes;
     sqi->mode.concretize_io_addresses = &g_s2e_concretize_io_addresses;
+#if defined(TARGET_ARM)
+    sqi->mode.allow_interrupt = &g_s2e_allow_interrupt;
+#endif
 
     sqi->exec.helper_register_symbol = helper_register_symbol;
     sqi->exec.cleanup_tb_exec = s2e_libcpu_cleanup_tb_exec;
