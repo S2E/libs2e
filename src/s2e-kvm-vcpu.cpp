@@ -868,4 +868,7 @@ void s2e_kvm_clone_process(void) {
     s2e::kvm::s_vcpu->cloneProcess();
 }
 
+void s2e_kvm_cpu_exit_request(void) {
+    s2e::kvm::s_vcpu->requestExit();
+}
 }
