@@ -523,6 +523,7 @@ void VCPU::cloneProcess(void) {
     }
 }
 
+#if defined(TARGET_ARM)
 int VCPU::customMInit(kvm_m_vcpu_init *firmware_init) {
     int ret;
     ret = s2e_init_firmware(&firmware_init->entry, &firmware_init->msp_init, &firmware_init->vtor);
@@ -532,6 +533,7 @@ int VCPU::customMInit(kvm_m_vcpu_init *firmware_init) {
 
     return ret;
 }
+#endif
 
 ///
 /// \brief s2e_kvm_send_cpu_exit_signal sends a signal
