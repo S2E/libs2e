@@ -148,6 +148,7 @@ int VM::registerFixedRegion(kvm_fixed_region *region) {
     return 0;
 }
 
+#ifdef CONFIG_SYMBEX
 #if defined(TARGET_ARM)
 int VM::initMemRegions(kvm_mem_init *mem_init) {
     int ret;
@@ -157,6 +158,7 @@ int VM::initMemRegions(kvm_mem_init *mem_init) {
     }
     return ret;
 }
+#endif
 #endif
 
 int VM::getDirtyLog(kvm_dirty_log *log) {
