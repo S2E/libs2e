@@ -523,6 +523,7 @@ void VCPU::cloneProcess(void) {
     }
 }
 
+#ifdef CONFIG_SYMBEX
 #if defined(TARGET_ARM)
 int VCPU::customMInit(kvm_m_vcpu_init *firmware_init) {
     int ret;
@@ -533,6 +534,7 @@ int VCPU::customMInit(kvm_m_vcpu_init *firmware_init) {
 
     return ret;
 }
+#endif
 #endif
 
 ///
