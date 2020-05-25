@@ -161,8 +161,8 @@ int VCPU::getSRegs(kvm_m_sregs *sregs) {
     sregs->exception = m_env->v7m.exception;
     sregs->pending_exception = m_env->v7m.pending_exception;
     sregs->thumb = m_env->thumb;
-    printf("sregs basepri=%#x\n", sregs->basepri);
-    printf("sregs control=%#x\n", sregs->control);
+    // printf("sregs basepri=%#x\n", sregs->basepri);
+    // printf("sregs control=%#x\n", sregs->control);
 
     return 0;
 }

@@ -116,7 +116,7 @@ uint64_t s2e_kvm_mmio_read(target_phys_addr_t addr, unsigned size) {
 #ifdef SE_KVM_DEBUG_MMIO
     unsigned print_addr = 0;
 #if defined(TARGET_ARM)
-    print_addr = 1;
+    print_addr = 0;
 #endif
 #ifdef SE_KVM_DEBUG_APIC
     if (addr >= 0xf0000000)
@@ -144,7 +144,7 @@ void s2e_kvm_mmio_write(target_phys_addr_t addr, uint64_t data, unsigned size) {
 #ifdef SE_KVM_DEBUG_MMIO
     unsigned print_addr = 0;
 #if defined(TARGET_ARM)
-    print_addr = 1;
+    print_addr = 0;
 #endif
 #ifdef SE_KVM_DEBUG_APIC
     if (addr >= 0xf0000000)
