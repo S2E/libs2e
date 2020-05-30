@@ -467,7 +467,7 @@ void *S2EKVM::timerCb(void *param) {
             // Required for shutdown, otherwise kvm clients may get stuck
             // Also required to give a chance timers to run
 
-            obj->sendCpuExitSignal();
+            //obj->sendCpuExitSignal();
         }
     }
 
