@@ -172,6 +172,12 @@ void s2e_kvm_mmio_write(target_phys_addr_t addr, uint64_t data, unsigned size) {
             assert(false && "Can't get here");
     }
 
+#if defined(TARGET_ARM)
+    if (addr == 0xe000ed08) {
+        env->v7m.vecbase = (uint32_t) data;
+    }
+#endif
+
 #if defined(TARGET_I386) || defined(TARGET_X86_64)
     bool is_apic_tpr_access = false;
     if ((addr >> TARGET_PAGE_BITS) == (env->v_apic_base >> TARGET_PAGE_BITS)) {
