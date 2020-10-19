@@ -66,7 +66,6 @@ int VCPU::setRegs(kvm_m_regs *regs) {
     m_env->regs[14] = regs->regs[14];
 #endif
     m_env->regs[15] = regs->regs[15];
-    printf("r15=%#x\n", m_env->regs[15]);
 
     return 0;
 }
