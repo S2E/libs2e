@@ -137,6 +137,7 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
     sqi->events.on_privilege_change_signals_count = g_s2e_on_privilege_change_signals_count;
     sqi->events.on_page_directory_change_signals_count = g_s2e_on_page_directory_change_signals_count;
     sqi->events.on_call_return_signals_count = g_s2e_on_call_return_signals_count;
+    sqi->events.on_invalid_pc_access_signals_count = g_s2e_on_invalid_pc_access_signals_count;
 
     sqi->events.on_privilege_change = s2e_on_privilege_change;
     sqi->events.on_page_directory_change = s2e_on_page_directory_change;
@@ -150,6 +151,7 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
 
     //sqi->events.tcg_make_peripheral_symbolic = s2e_tcg_make_peripheral_symbolic;
 
+    sqi->events.on_invalid_pc_access = s2e_on_invalid_pc_access;
     sqi->events.on_translate_soft_interrupt_start = s2e_on_translate_soft_interrupt_start;
     sqi->events.on_translate_block_start = s2e_on_translate_block_start;
     sqi->events.on_translate_block_end = s2e_on_translate_block_end;
