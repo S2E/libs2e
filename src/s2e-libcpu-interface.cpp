@@ -149,8 +149,6 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
     sqi->events.tcg_custom_instruction_handler = s2e_tcg_custom_instruction_handler;
     sqi->events.tcg_emit_custom_instruction = s2e_tcg_emit_custom_instruction;
 
-    //sqi->events.tcg_make_peripheral_symbolic = s2e_tcg_make_peripheral_symbolic;
-
     sqi->events.on_invalid_pc_access = s2e_on_invalid_pc_access;
     sqi->events.on_translate_soft_interrupt_start = s2e_on_translate_soft_interrupt_start;
     sqi->events.on_translate_block_start = s2e_on_translate_block_start;
