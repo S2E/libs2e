@@ -131,6 +131,7 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
     sqi->events.on_translate_instruction_end_signals_count = g_s2e_on_translate_instruction_end_signals_count;
     sqi->events.on_translate_register_access_signals_count = g_s2e_on_translate_register_access_signals_count;
     sqi->events.on_exception_signals_count = g_s2e_on_exception_signals_count;
+    sqi->events.on_exception_exit_signals_count = g_s2e_on_exception_exit_signals_count;
     sqi->events.on_page_fault_signals_count = g_s2e_on_page_fault_signals_count;
     sqi->events.on_tlb_miss_signals_count = g_s2e_on_tlb_miss_signals_count;
     sqi->events.on_port_access_signals_count = g_s2e_on_port_access_signals_count;
@@ -150,6 +151,7 @@ void init_s2e_libcpu_interface(struct se_libcpu_interface_t *sqi) {
     sqi->events.tcg_emit_custom_instruction = s2e_tcg_emit_custom_instruction;
 
     sqi->events.on_invalid_pc_access = s2e_on_invalid_pc_access;
+    sqi->events.on_armv7m_interrupt_exit = s2e_on_exception_exit;
     sqi->events.on_translate_soft_interrupt_start = s2e_on_translate_soft_interrupt_start;
     sqi->events.on_translate_block_start = s2e_on_translate_block_start;
     sqi->events.on_translate_block_end = s2e_on_translate_block_end;
