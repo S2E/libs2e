@@ -13,7 +13,14 @@
 #include <timer.h>
 
 #include <cpu/cpu-common.h>
+
+#if defined(TARGET_I386) || defined(TARGET_X86_64)
 #include <cpu/i386/cpu.h>
+#elif defined(TARGET_ARM)
+#include <cpu/arm/cpu.h>
+#else
+#error Unsupported target architecture
+#endif
 #include <cpu/ioport.h>
 
 #ifdef CONFIG_SYMBEX
@@ -27,7 +34,9 @@
 #endif
 
 #include "libs2e.h"
+
 #include "s2e-kvm-vcpu.h"
+
 #include "s2e-kvm-vm.h"
 #include "s2e-kvm.h"
 
@@ -97,17 +106,21 @@ int VM::setTSSAddress(uint64_t tss_addr) {
 }
 
 int VM::setUserMemoryRegion(kvm_userspace_memory_region *region) {
-    m_cpu->requestExit();
+    if (m_cpu) {
+        m_cpu->requestExit();
 
-    m_cpu->lock();
+        m_cpu->lock();
 
-    assert(!m_cpu->inKvmRun());
-    m_cpu->flushTlb();
-    mem_desc_unregister(region->slot);
-    mem_desc_register(region);
+        assert(!m_cpu->inKvmRun());
+        m_cpu->flushTlb();
+        mem_desc_unregister(region->slot);
+        mem_desc_register(region);
 
-    m_cpu->unlock();
-
+        m_cpu->unlock();
+    } else {
+        mem_desc_unregister(region->slot);
+        mem_desc_register(region);
+    }
     return 0;
 }
 
@@ -134,6 +147,19 @@ int VM::registerFixedRegion(kvm_fixed_region *region) {
 #endif
     return 0;
 }
+
+#ifdef CONFIG_SYMBEX
+#if defined(TARGET_ARM)
+int VM::initMemRegions(kvm_mem_init *mem_init) {
+    int ret;
+    ret = s2e_init_mem(&mem_init->baseaddr, &mem_init->size, &mem_init->num, &mem_init->is_rom);
+    if (ret < 0) {
+        errno = 1;
+    }
+    return ret;
+}
+#endif
+#endif
 
 int VM::getDirtyLog(kvm_dirty_log *log) {
     m_cpu->requestExit();
@@ -223,6 +249,7 @@ int VM::setClockScalePointer(unsigned *scale) {
 
 int VM::sys_ioctl(int fd, int request, uint64_t arg1) {
     int ret = -1;
+
     switch ((uint32_t) request) {
         case KVM_CHECK_EXTENSION:
             ret = m_kvm->checkExtension(arg1);
@@ -291,7 +318,16 @@ int VM::sys_ioctl(int fd, int request, uint64_t arg1) {
         case KVM_SET_CLOCK_SCALE: {
             ret = setClockScalePointer((unsigned *) arg1);
         } break;
+#if defined(TARGET_ARM)
+        case KVM_IRQ_LINE: {
+            m_cpu->setIrqLine((kvm_irq_level *) arg1);
+            ret = 0;
+        } break;
 
+        case KVM_MEM_REGION_INIT: {
+            ret = initMemRegions((kvm_mem_init *) arg1);
+        } break;
+#endif
         default: {
             fprintf(stderr, "libs2e: unknown KVM VM IOCTL %x\n", request);
             exit(-1);

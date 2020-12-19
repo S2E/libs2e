@@ -13,7 +13,8 @@ Building and Running libs2e
    git clone https://github.com/S2E/qemu
    mkdir s2e-qemu-build
    cd s2e-qemu-build
-   ../s2e-qemu/configure --enable-debug --disable-werror --target-list="i386-softmmu x86_64-softmmu" --disable-docs
+   ../s2e-qemu/configure --enable-debug --disable-werror --disable-docs \
+       --target-list="i386-softmmu x86_64-softmmu arm-softmmu"
    make
    export QEMU_BUILD=/path/to/qemu-build
    ```
